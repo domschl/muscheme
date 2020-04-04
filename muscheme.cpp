@@ -16,6 +16,16 @@ struct astnode {
     int size;
     astnode *right;
     astnode *down;
+    astnode() {
+        type=atom::nul;
+        val=nullptr;
+        size=0;
+        right=nullptr;
+        down=nullptr;
+    }
+    ~astnode() {
+        if (val != nullptr) free(val);
+    }
 };
 
 enum aststate {start, inter, token, end};
@@ -213,14 +223,42 @@ atom getTokType(std::string tok) {
     return atom::symbol;
 }
 
-bool parse(string cmd) {
+std::vector<astnode *> parse(string cmd) {
+    std::vector<astnode *> ast;
+    std::vector<astnode *> stack;
     std::vector<string> toks=tokenize(cmd);
+    astnode *plast=nullptr;
+    astnode *pastnode=nullptr;
+    bool val=true;
     for (auto const& tok: toks) {
         int t=getTokType(tok);
+        if (t==atom::nul) val=false;
         printf("[%s](%s) ",tok.c_str(),atomnames[t].c_str());
     }
     printf("\n");
-    return false;
+    if (!val) {
+        printf("INVALID\n");
+        return ast;
+    } else {
+        for (int i=0; i<toks.size(); i++) {
+            switch (getTokType(toks[i])) {
+                    pastnode->type=atom::list;
+                    ast.push_back(pastnode);
+                    if (plast!=nullptr) {
+                        plast->down=pastnode;
+                        stack.push_back(plast);
+                    }
+                    plast=pastnode;
+                    break;
+                case atom::liste:
+                    plast=stack.back();
+                    stack.pop_back();
+                    break;
+            }
+        }
+    }
+    
+    return ast;
 }
 
 int testit() {
