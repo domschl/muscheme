@@ -5,66 +5,57 @@
 enum atom {nul, inum, fnum, string, symbol, proc, list};
 enum astval {valid, invalid, empty};
 
-struct ast;
-typedef std::vector<ast *> astlist;
 
-struct ast {
+struct astnode {
     atom type;
-    astval state;
-    union {
-        int inum;
-        double fnum;
-        std::string str;
-        astlist vlist;
-    };
-    ast() {
-        type=atom::nul;
-        state=astval::empty;
-    }
-    ~ast() {
-
-    }
+    void *val;
+    int size;
+    astnode *right;
+    astnode *down;
 };
 
 enum aststate {start, inter, token, end};
 
-ast* parseToken(std::string tok) {
-    ast *past=new ast();
+astnode* parseToken(std::string tok) {
+    printf("[%s]", tok.c_str());
     std::string iss="-0123456789";
     std::string isn="0123456789";
     std::string fss="-.0123456789";
     if (tok.find("\"")!=std::string::npos) { // check string
         if (tok[0]!='"' || tok[tok.length()-1]!='"') {
             printf("Invalid string: %s",tok.c_str());
-            free(past);
-            return nullptr;
+            nast.state=astval::invalid;
         } 
         // more esc checks
-        past->type=atom::string;
-        past->state=astval::valid;
-        past->str=std::string(tok.substr(1,tok.length()-2));
-        return past;
-    } else if (fss.find(tok[0]) == std::string::npos) { // check symbol
-        past->type=atom::symbol;
-        past->state=astval::valid;  // XXX checks
-        past->str=std::string(tok);
-        return past;
-    } else if (tok.find('.') != std::string::npos) { // check float
-        past->type=atom::fnum;
-        past->state=astval::valid;  // XXX checks
-        past->fnum=atof(tok.c_str());
-        return past;
-    } else { // check int
-        past->type=atom::inum;
-        past->state=astval::valid;  // XXX checks
-        past->inum=atoi(tok.c_str());
-        return past;
+        nast.type=atom::string;
+        nast.state=astval::valid;
+        nast.u.str=tok.substr(1,tok.length()-2);
+        return nast;
+    } else {
+        if (fss.find(tok[0]) == std::string::npos) { // check symbol
+            nast.type=atom::symbol;
+            nast.state=astval::valid;  // XXX checks
+            nast.u.str=tok;
+        return nast;
+        } else {
+            if (tok.find('.') != std::string::npos) { // check float
+                nast.type=atom::fnum;
+                nast.state=astval::valid;  // XXX checks
+                nast.u.fnum=atof(tok.c_str());
+                return nast;
+            } else { // check int
+                nast.type=atom::inum;
+                nast.state=astval::valid;  // XXX checks
+                nast.u.inum=atoi(tok.c_str());
+                return nast;
+            }
+        }
     }
 }
 
-astlist split(std::string cmd) {
-    astlist vlist;
-    astlist empty;
+astlist *split(std::string cmd) {
+    astlist *vlist = new astlist();
+    astlist *empty = new astlist();
     aststate state=aststate::start;
     std::string ws=" \t\n\r";
     std::string wse=" \t\n\r)(";
@@ -75,12 +66,14 @@ astlist split(std::string cmd) {
             case aststate::token:
                 printf("<t>");
                 if (wse.find(cmd[i])!=std::string::npos) {
-                    ast *pel=parseToken(curtok);
-                    if (pel && pel->state==astval::valid) {
-                        vlist.push_back(pel);
+                    ast el=parseToken(curtok);
+                    if (el.state==astval::valid) {
+                        vlist->push_back(el);
                     }
-                    printf("->i>");
+                    printf("%s->i>",el.u.str);
                     state=aststate::inter; 
+                } else {
+                    curtok+=cmd[i];
                 }
                 break;
             case aststate::inter:
@@ -107,15 +100,15 @@ astlist split(std::string cmd) {
                         lc=cmd[j];
                         if (lv==0) {
                             subok=true;
-                            ast *pel=new ast();
-                            pel->type=atom::list;
-                            pel->vlist=split(substr);
-                            if ((pel->vlist).size()>0) {
-                                pel->state=astval::valid;
-                                vlist.push_back(pel);
+                            ast el; //={atom::nul, astval::invalid, 0};
+                            el.type=atom::list;
+                            el.vlist=split(substr);
+                            if ((el.vlist)->size()>0) {
+                                el.state=astval::valid;
+                                vlist->push_back(el);
                             } else {
                                 printf("Parsing failed with sub-expression: %s", substr.c_str());
-                                free(pel);
+                                //free(pel);
                                 return empty;
                             }
                             i==j;
@@ -146,33 +139,33 @@ astlist split(std::string cmd) {
     return vlist;
 }
 
-void printAstlist(astlist al) {
-    for (int i=0; i<al.size(); i++ ) {
-        if (al[i]->state==astval::invalid) {
+void printAstlist(astlist *al) {
+    for (int i=0; i<al->size(); i++ ) {
+        if ((*al)[i].state==astval::invalid) {
             printf("INV ");
-        } else if (al[i]->state==astval::empty) {
+        } else if ((*al)[i].state==astval::empty) {
             printf("EMPTY ");
         } else {
-            switch (al[i]->type) {
+            switch ((*al)[i]->type) {
                 case atom::fnum:
-                    printf("fnum %f ",al[i]->fnum);
+                    printf("fnum %f ",(*al)[i].fnum);
                     break;
                 case atom::inum:
-                    printf("inum %d ",al[i]->inum);
+                    printf("inum %d ",(*al)[i].inum);
                     break;
                 case atom::symbol:
-                    printf("sym %s",al[i]->str);
+                    printf("sym %s",(*al)[i].str);
                     break;
                 case atom::string:
-                    printf("string %s ",al[i]->str);
+                    printf("string %s ",(*al)[i].str);
                     break;
                 case atom::list:
                     printf(" ( ");
-                    printAstlist(al[i]->vlist);
+                    printAstlist((*al)[i].vlist);
                     printf(" ) ");
                     break;
                 default:
-                    printf("TYPEERR %d ",al[i]->type);
+                    printf("TYPEERR %d ",(*al)[i].type);
                     break;
             }
         }
@@ -180,7 +173,7 @@ void printAstlist(astlist al) {
 }
 
 std::string eval(std::string cmd) {
-    astlist vlist=split(cmd);
+    astlist *vlist=split(cmd);
     printAstlist(vlist);
     printf("\n");
     return "";
