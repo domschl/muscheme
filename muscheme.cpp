@@ -29,14 +29,12 @@ bool isnat(string tok) {
 }
 
 bool isint(string tok) {
-    printf("isint: %s\n",tok.c_str());
     if (tok.length()==0) return false;
     if (tok[0]=='-') return isnat(tok.substr(1));
     return isnat(tok);
 }
 
 bool issimpfloat(string tok) {
-    printf("Simpfloat: %s\n",tok.c_str());
     if (tok.length()==0) return false;
     int p1=tok.find('.');
     if (p1!=NPOS) {
@@ -56,6 +54,80 @@ bool isfloat(string tok) {
     } else {
         return issimpfloat(tok.substr(0,p1)) && isint(tok.substr(p1+1));
     }
+}
+
+bool isstr(string tok) {  // handling for '/'?! TBD.
+    if (tok.length()<2) return false;
+    if (tok[0]!='"' || tok[tok.length()-1]!='"') return false;
+    int si=1;
+    while (true) {
+        int p=tok.substr(si,tok.length()-si-1).find('"');
+        if (p==NPOS) return true;
+        if (tok[p+si-1]!='\\') return false;
+        si=p+si+1;
+    }
+}
+
+enum tokstate {nil, sym, vstr, quot, comm};
+
+std::vector<string> tokenize(string cmd) {
+    std::vector<string> toks;
+    char lc=0;
+    int brlev=0;
+    bool islist=false;
+    tokstate state=tokstate::nil;
+    string subtok;
+    for (int i=0; i<cmd.length(); i++) {
+        char c=cmd[i];
+        switch (state) {
+            case tokstate::nil:
+                subtok="";
+                switch (c) {
+                    case '(':
+                        lc+=1;
+                        islist=true;
+                        toks.push_back("(");
+                        break;
+                    case ')':
+                        if (lc==0) {
+                            printf("Invalid ')': %s",cmd.substr(0,i).c_str()); 
+                            std::vector<string> empty;
+                            return empty;
+                        } else {
+                            lc-=1;
+                            if (lc==0) islist=false;
+                            toks.push_back(")");
+                        }
+                        continue;
+                    case '"':
+                        subtok="\"";
+                        state=tokstate::vstr;
+                        continue;
+                    case '\'':
+                        subtok="\'";
+                        state=tokstate::quot;
+                        break;
+                    case ';':
+                        subtok=";";
+                        state=tokstate::comm;
+                        break;
+                    default:
+                        subtok=c;
+                        state=tokstate::sym;
+                        break;
+                }
+                break;
+            default:
+                printf("Internal tokenizer error at: %s",cmd.substr(0,i).c_str());
+                std::vector<string> empty;
+                return empty;
+        }
+    }
+    return toks;
+}
+
+bool parse(string cmd) {
+    return false;
 }
 
 int testit() {
@@ -78,7 +150,7 @@ int testit() {
             printf("OK: %s is not an int.\n",it.c_str());
         }
     }
-   std::vector<string> floats{"0","01","23424","02020202","-1","-0","-923432",".1","0.","-.1","-0.234","134.3233", ".0e4", "0e4","-1e3", "1E4", "1E-4", "-1.343e-32"};
+    std::vector<string> floats{"0","01","23424","02020202","-1","-0","-923432",".1","0.","-.1","-0.234","134.3233", ".0e4", "0e4","-1e3", "1E4", "1E-4", "-1.343e-32"};
     for(auto const& it: floats) {
         if (!isfloat(it)) {
             printf("Fail: %s is float!\n",it.c_str());
@@ -94,6 +166,24 @@ int testit() {
             ++errs;
         } else {
             printf("OK: %s is not a float.\n",it.c_str());
+        }
+    }
+   std::vector<string> strs{"\"\"", "\"asdf\"","\"a\\\"a\"","\"\\\"a\\\"\"","\"a a b\""};
+    for(auto const& it: strs) {
+        if (!isstr(it)) {
+            printf("Fail: %s is str!\n",it.c_str());
+            ++errs;
+        } else {
+            printf("OK: %s is str.\n",it.c_str());
+        }
+    }
+    std::vector<string> nstrs{"asdf","\"asfd\"asdf\"","\"asdf","asdf\"","","\"","\"\"\""};
+    for (auto const& it: nstrs) {
+        if (isstr(it)) {
+            printf("Fail: %s is NOT a str!\n",it.c_str());
+            ++errs;
+        } else {
+            printf("OK: %s is not a str.\n",it.c_str());
         }
     }
     return errs;
