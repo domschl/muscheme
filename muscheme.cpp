@@ -3,7 +3,8 @@
 #include <vector>
 #include <cassert>
 
-enum atom {nul, inum, fnum, str, symbol, proc, list};
+enum atom {nul=0, inum, fnum, str, symbol, proc, list, lista, liste, cmt, qt};
+std::vector<std::string> atomnames{"nul","inum","fnum","str","symbol","proc","list","lista","liste","cmt","qt"};
 enum astval {valid, invalid, empty};
 
 typedef std::string string;
@@ -72,29 +73,36 @@ enum tokstate {nil, sym, vstr, quot, comm};
 
 std::vector<string> tokenize(string cmd) {
     std::vector<string> toks;
+    std::vector<string> empty;
     char lc=0;
+    char c=0;
     int brlev=0;
     bool islist=false;
     tokstate state=tokstate::nil;
     string subtok;
+    string ws=" \t\n\r";
+    string lbchars="\n\r";
+    string spechars="();";
+    string reschars="\"'";
     for (int i=0; i<cmd.length(); i++) {
+        lc=c;
         char c=cmd[i];
         switch (state) {
             case tokstate::nil:
                 subtok="";
+                if (ws.find(c)!=NPOS) continue;
                 switch (c) {
                     case '(':
-                        lc+=1;
+                        brlev+=1;
                         islist=true;
                         toks.push_back("(");
-                        break;
+                        continue;
                     case ')':
-                        if (lc==0) {
-                            printf("Invalid ')': %s",cmd.substr(0,i).c_str()); 
-                            std::vector<string> empty;
+                        if (brlev==0) {
+                            printf("Too many ')' after: %s",cmd.substr(0,i).c_str()); 
                             return empty;
                         } else {
-                            lc-=1;
+                            brlev-=1;
                             if (lc==0) islist=false;
                             toks.push_back(")");
                         }
@@ -106,27 +114,112 @@ std::vector<string> tokenize(string cmd) {
                     case '\'':
                         subtok="\'";
                         state=tokstate::quot;
-                        break;
+                        continue;
                     case ';':
                         subtok=";";
                         state=tokstate::comm;
-                        break;
+                        continue;
                     default:
                         subtok=c;
                         state=tokstate::sym;
-                        break;
+                        continue;
                 }
                 break;
+            case tokstate::vstr:
+                subtok+=c;
+                if (c=='\"' && lc!='\\') {
+                    toks.push_back(subtok);
+                    state=tokstate::nil;
+                }
+                continue;
+            case tokstate::sym:
+            case tokstate::quot:
+                if (reschars.find(c)!=NPOS) {
+                    printf("Unexpected character after: %s\n",cmd.substr(0,i).c_str());
+                    return empty;
+                }
+                if (ws.find(c)!=NPOS) {
+                    toks.push_back(subtok);
+                    state=tokstate::nil;
+                    continue;
+                }
+                if (spechars.find(c)!=NPOS) {
+                    toks.push_back(subtok);
+                    --i;
+                    state=tokstate::nil;
+                    continue;
+                }
+                subtok+=c;
+                continue;
+            case tokstate::comm:
+                if (lbchars.find(c)!=NPOS) {
+                    toks.push_back(subtok);
+                    state=tokstate::nil;
+                }
+                subtok+=c;
+                continue;
             default:
                 printf("Internal tokenizer error at: %s",cmd.substr(0,i).c_str());
-                std::vector<string> empty;
                 return empty;
         }
+    }
+    if (brlev>0) {
+        printf("Missing closing parentesis after: %s\n", cmd.c_str());
+        return empty;
+    }
+    switch (state) {
+        case tokstate::vstr:
+            printf("String expression not closed after: %s\n", cmd.c_str());
+            return empty;
+        case tokstate::comm:
+        case tokstate::sym:
+        case tokstate::quot:
+            toks.push_back(subtok);
+            break;
+        case tokstate::nil:
+            break;
+        default:
+            printf("Invalid end-state %d\n",state);
+            return empty;
     }
     return toks;
 }
 
+atom getTokType(std::string tok) {
+    std::string num="-.0123456789";
+    if (tok==")") {
+        return atom::liste;
+    }
+    if (tok=="(") {
+        return atom::lista;
+    }
+    if (tok[0]==';') {
+        return atom::cmt;
+    }
+    if (tok[0]=='"') {
+        if (isstr(tok)) return atom::str;
+        else {
+            printf("Invalid string token: %s\n",tok.c_str());
+            return atom::nul;
+        }
+    }
+    if (num.find(tok[0])!=NPOS) {
+        if (isint(tok)) return atom::inum;
+        if (isfloat(tok)) return atom::fnum;
+        printf("Invalid number token: %s\n",tok.c_str());
+        return atom::nul;
+    }
+    if (tok[0]=='\'') return atom::qt;
+    return atom::symbol;
+}
+
 bool parse(string cmd) {
+    std::vector<string> toks=tokenize(cmd);
+    for (auto const& tok: toks) {
+        int t=getTokType(tok);
+        printf("[%s](%s) ",tok.c_str(),atomnames[t].c_str());
+    }
+    printf("\n");
     return false;
 }
 
@@ -189,10 +282,22 @@ int testit() {
     return errs;
 }
 
+void repl(std::string prompt="μλ> ") {
+    std::string cmd;
+    while (true) {
+        std::cout << prompt;
+        getline(std::cin, cmd);
+        printf("%s\n",cmd.c_str());
+        if (cmd=="(quit)") return;
+        parse(cmd);
+    }
+}
+
 int main(int argc, char *argv[]) {
     int errs=testit();
     if (errs==0) {
         printf("All tests passed!\n");
+        repl();
         return 0;
     } else {
         printf("%d tests failed!\n",errs);
