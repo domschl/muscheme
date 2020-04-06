@@ -1,7 +1,6 @@
 #include <string>
 #include <iostream>
 #include <vector>
-#include <cassert>
 
 enum atom {nul=0, inum, fnum, str, symbol, proc, list, lista, liste, cmt, qt};
 std::vector<std::string> atomnames{"nul","inum","fnum","str","symbol","proc","list","lista","liste","cmt","qt"};
@@ -79,11 +78,13 @@ bool isstr(string tok) {  // handling for '/'?! TBD.
     }
 }
 
-enum tokstate {nil, sym, vstr, quot, comm};
+enum tokstate {nil, sym, vstr, comm};
 
 std::vector<string> tokenize(string cmd) {
     std::vector<string> toks;
     std::vector<string> empty;
+    std::vector<int> qlev;
+    bool qmode=false;
     char lc=0;
     char c=0;
     int brlev=0;
@@ -113,6 +114,11 @@ std::vector<string> tokenize(string cmd) {
                             return empty;
                         } else {
                             brlev-=1;
+                            if (qmode && qlev.back()==brlev) {
+                                toks.push_back(")");
+                                qlev.pop_back();
+                                if (qlev.size()==0) qmode=false;
+                            }
                             if (lc==0) islist=false;
                             toks.push_back(")");
                         }
@@ -122,8 +128,11 @@ std::vector<string> tokenize(string cmd) {
                         state=tokstate::vstr;
                         continue;
                     case '\'':
-                        subtok="\'";
-                        state=tokstate::quot;
+                        toks.push_back("(");
+                        toks.push_back("quote");
+                        qlev.push_back(brlev);
+                        state=tokstate::nil;
+                        qmode=true;
                         continue;
                     case ';':
                         subtok=";";
@@ -140,10 +149,14 @@ std::vector<string> tokenize(string cmd) {
                 if (c=='\"' && lc!='\\') {
                     toks.push_back(subtok);
                     state=tokstate::nil;
+                    if (qmode && qlev.back()==brlev) {
+                        toks.push_back(")");
+                        qlev.pop_back();
+                        if (qlev.size()==0) qmode=false;
+                    } 
                 }
                 continue;
             case tokstate::sym:
-            case tokstate::quot:
                 if (reschars.find(c)!=NPOS) {
                     printf("Unexpected character after: %s\n",cmd.substr(0,i).c_str());
                     return empty;
@@ -151,12 +164,22 @@ std::vector<string> tokenize(string cmd) {
                 if (ws.find(c)!=NPOS) {
                     toks.push_back(subtok);
                     state=tokstate::nil;
+                    if (qmode && qlev.back()==brlev) {
+                        toks.push_back(")");
+                        qlev.pop_back();
+                        if (qlev.size()==0) qmode=false;
+                    }
                     continue;
                 }
                 if (spechars.find(c)!=NPOS) {
                     toks.push_back(subtok);
                     --i;
                     state=tokstate::nil;
+                    if (qmode && qlev.back()==brlev) {
+                        toks.push_back(")");
+                        qlev.pop_back();
+                        if (qlev.size()==0) qmode=false;
+                    }
                     continue;
                 }
                 subtok+=c;
@@ -183,7 +206,6 @@ std::vector<string> tokenize(string cmd) {
             return empty;
         case tokstate::comm:
         case tokstate::sym:
-        case tokstate::quot:
             toks.push_back(subtok);
             break;
         case tokstate::nil:
