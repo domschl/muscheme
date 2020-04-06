@@ -197,7 +197,8 @@ std::vector<string> tokenize(string cmd) {
         }
     }
     if (brlev>0) {
-        printf("Missing closing parentesis after: %s\n", cmd.c_str());
+        if (state!=tokstate::vstr)printf("Missing closing parentesis after: %s\n", cmd.c_str());
+        else printf("Missing string-closing \" (and maybe: closing parentesis missing) after: %s\n", cmd.c_str());
         return empty;
     }
     switch (state) {
