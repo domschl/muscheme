@@ -214,6 +214,11 @@ std::vector<string> tokenize(string cmd) {
             printf("Invalid end-state %d\n",state);
             return empty;
     }
+    if (qlev.size()>0) {
+        for (int i=0; i<qlev.size(); i++) {
+            toks.push_back(")");
+        }
+    }
     return toks;
 }
 
