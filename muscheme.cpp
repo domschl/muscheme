@@ -242,6 +242,7 @@ std::vector<astnode *> parse(string cmd) {
     } else {
         for (int i=0; i<toks.size(); i++) {
             switch (getTokType(toks[i])) {
+                case atom::lista:
                     pastnode->type=atom::list;
                     ast.push_back(pastnode);
                     if (plast!=nullptr) {
