@@ -265,18 +265,25 @@ std::vector<astnode *> parse(string cmd) {
         for (int i=0; i<toks.size(); i++) {
             switch (getTokType(toks[i])) {
                 case atom::lista:
+                    pastnode=new astnode();
                     pastnode->type=atom::list;
                     ast.push_back(pastnode);
                     if (plast!=nullptr) {
                         plast->down=pastnode;
-                        stack.push_back(plast);
                     }
+                    stack.push_back(plast);
                     plast=pastnode;
                     break;
                 case atom::liste:
-                    plast=stack.back();
-                    stack.pop_back();
+                    if (stack.size()>0) {
+                        plast=stack.back();
+                        stack.pop_back();
+                    } else {
+                        printf("AST stack corruption!\n");
+                    }
                     break;
+                default:
+                    printf("Huch!\n");
             }
         }
     }
