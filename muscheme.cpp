@@ -1,4 +1,5 @@
 #include <string>
+#include <cstring>
 #include <iostream>
 #include <vector>
 #include <cstdlib>
@@ -272,7 +273,9 @@ std::vector<astnode *> parse(string cmd) {
         return ast;
     } else {
         for (int i=0; i<toks.size(); i++) {
-            switch (getTokType(toks[i])) {
+            atom tt=getTokType(toks[i]);
+
+            switch (tt) {
                 case atom::lista:
                     pastnode=new astnode();
                     pastnode->type=atom::list;
@@ -291,8 +294,15 @@ std::vector<astnode *> parse(string cmd) {
                         printf("AST stack corruption!\n");
                     }
                     break;
+                case atom::inum:
+                    pastnode=new astnode();
+                    pastnode->type=atom::inum;
+                    pastnode->size=sizeof(int);
+                    pastnode->val=malloc(pasnode->size);
+                    int ival=atoi(toks[i]);
+                   memcpy(
                 default:
-                    printf("Huch!\n");
+                    printf("Huch! %s\n",atomnames[tt].c_str());
             }
         }
     }
