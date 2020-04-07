@@ -1,6 +1,9 @@
 #include <string>
 #include <iostream>
 #include <vector>
+#include <cstdlib>
+
+#include "munum.h"
 
 enum atom {nul=0, inum, fnum, str, symbol, proc, list, lista, liste, cmt, qt};
 std::vector<std::string> atomnames{"nul","inum","fnum","str","symbol","proc","list","lista","liste","cmt","qt"};
@@ -356,6 +359,26 @@ int testit() {
     return errs;
 }
 
+int testnum() {
+    int errs=0;
+    int i1,i2,i3;
+    munum a,b,c;
+    for (int i=0; i<100; i++) {
+        i1=rand()/2;
+        i2=rand()/2;
+        a=munum(i1);
+        b=munum(i2);
+        c=muipadd(a,b);
+        if (i1+i2!=atoi(c.nom.c_str())) {
+             printf("Error: %d+%d=%d, not %s %s\n",i1,i2,i1+i2,c.str().c_str(),c.nom.c_str());
+             errs+=1;
+        } else {
+             printf("OK: %d+%d=%d, %s\n",i1,i2,i1+i2,c.str().c_str());
+        }
+    }
+    return errs;
+}
+
 void repl(std::string prompt="μλ> ") {
     std::string cmd;
     while (true) {
@@ -369,6 +392,7 @@ void repl(std::string prompt="μλ> ") {
 
 int main(int argc, char *argv[]) {
     int errs=testit();
+    errs+=testnum();
     if (errs==0) {
         printf("All tests passed!\n");
         repl();
