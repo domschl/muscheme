@@ -298,11 +298,13 @@ std::vector<astnode *> parse(string cmd) {
                     pastnode=new astnode();
                     pastnode->type=atom::inum;
                     pastnode->size=sizeof(int);
-                    pastnode->val=malloc(pasnode->size);
-                    int ival=atoi(toks[i]);
-                   memcpy(
-                default:
-                    printf("Huch! %s\n",atomnames[tt].c_str());
+                    pastnode->val=malloc(pastnode->size);
+                    int ival=atoi(toks[i].c_str());
+                    std::memcpy(pastnode->val,(const void *)&ival,sizeof(pastnode->size));
+                    break;
+                //default:
+                //    printf("Huch! %s\n",atomnames[tt].c_str());
+                //    break;
             }
         }
     }
@@ -373,17 +375,24 @@ int testnum() {
     int errs=0;
     int i1,i2,i3;
     munum a,b,c;
-    for (int i=0; i<100; i++) {
+    for (int i=0; i<1000000; i++) {
         i1=rand()/2;
         i2=rand()/2;
         a=munum(i1);
         b=munum(i2);
         c=muipadd(a,b);
-        if (i1+i2!=atoi(c.nom.c_str())) {
+        if (i1+i2!=atoi(c.str().c_str())) {
              printf("Error: %d+%d=%d, not %s %s\n",i1,i2,i1+i2,c.str().c_str(),c.nom.c_str());
              errs+=1;
         } else {
              printf("OK: %d+%d=%d, %s\n",i1,i2,i1+i2,c.str().c_str());
+        }
+        c=muipsub(a,b);
+        if (i1-i2!=atoi(c.str().c_str())) {
+             printf("Error: %d-%d=%d, not %s %s\n",i1,i2,i1-i2,c.str().c_str(),c.nom.c_str());
+             errs+=1;
+        } else {
+             printf("OK: %d-%d=%d, %s\n",i1,i2,i1-i2,c.str().c_str());
         }
     }
     return errs;
