@@ -261,6 +261,7 @@ std::vector<astnode *> parse(string cmd) {
     std::vector<string> toks=tokenize(cmd);
     astnode *plast=nullptr;
     astnode *pastnode=nullptr;
+    int ival;
     bool val=true;
     for (auto const& tok: toks) {
         int t=getTokType(tok);
@@ -274,7 +275,6 @@ std::vector<astnode *> parse(string cmd) {
     } else {
         for (int i=0; i<toks.size(); i++) {
             atom tt=getTokType(toks[i]);
-
             switch (tt) {
                 case atom::lista:
                     pastnode=new astnode();
@@ -299,12 +299,12 @@ std::vector<astnode *> parse(string cmd) {
                     pastnode->type=atom::inum;
                     pastnode->size=sizeof(int);
                     pastnode->val=malloc(pastnode->size);
-                    int ival=atoi(toks[i].c_str());
+                    ival=atoi(toks[i].c_str());
                     std::memcpy(pastnode->val,(const void *)&ival,sizeof(pastnode->size));
                     break;
-                //default:
-                //    printf("Huch! %s\n",atomnames[tt].c_str());
-                //    break;
+                default:
+                    printf("Huch! %s\n",atomnames[tt].c_str());
+                    break;
             }
         }
     }
