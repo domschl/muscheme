@@ -70,14 +70,14 @@ int testnum(Muscheme &ms) {
         i2=rand()/2;
         a=munum(i1);
         b=munum(i2);
-        c=muipadd(a,b);
+        c=a.muipadd(a,b);
         if (i1+i2!=atoi(c.str().c_str())) {
              printf("Error: %d+%d=%d, not %s %s\n",i1,i2,i1+i2,c.str().c_str(),c.nom.c_str());
              errs+=1;
         } else {
              printf("OK: %d+%d=%d, %s\n",i1,i2,i1+i2,c.str().c_str());
         }
-        c=muipsub(a,b);
+        c=a.muipsub(a,b);
         if (i1-i2!=atoi(c.str().c_str())) {
              printf("Error: %d-%d=%d, not %s %s\n",i1,i2,i1-i2,c.str().c_str(),c.nom.c_str());
              errs+=1;
