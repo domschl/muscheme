@@ -107,7 +107,7 @@ int testcmpnum(Muscheme &ms, int count=1000, bool verbose=false) {
         b3=a.mugr(a,b);
         if ((i1>i2)!=b3 || !b1 || !b2) {
              printf("Error: %d > %d == %s\n",i1,i2,b3?"true":"false");
-             if (b1 || b2) printf("EQ error!\n");
+             if (!b1 || !b2) printf("EQ error!\n");
              errs+=1;
         } else {
             if (verbose) printf("OK: %d > %d == %s\n",i1,i2,b3?"true":"false");

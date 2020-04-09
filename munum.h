@@ -277,11 +277,11 @@ struct munum {
        if (num1.type!=mum_valid || num2.type!=mum_valid) return false;
        if (num1.pos != num2.pos) return num1.pos;
        if (num1.den==num2.den) {
-           if (num1.nom.length()>num2.nom.length()) return true;
-           if (num1.nom.length()<num2.nom.length()) return false;
+           if (num1.nom.length()>num2.nom.length()) return num1.pos;
+           if (num1.nom.length()<num2.nom.length()) return !num1.pos;
            for (unsigned int i=0; i<num1.nom.length(); i++) {
-               if (num1.nom[i]>num2.nom[i]) return true;
-               if (num1.nom[i]<num2.nom[i]) return false;
+               if (num1.nom[i]>num2.nom[i]) return num1.pos;
+               if (num1.nom[i]<num2.nom[i]) return !num1.pos;
            }
            return false;
        } else {
@@ -289,11 +289,11 @@ struct munum {
            munum n1,n2;
            n1=mumul(n11,n22);
            n2=mumul(n12,n21);
-           if (n1.nom.length()>n2.nom.length()) return true;
-           if (n1.nom.length()<n2.nom.length()) return false;
+           if (n1.nom.length()>n2.nom.length()) return num1.pos;
+           if (n1.nom.length()<n2.nom.length()) return !num1.pos;
            for (unsigned int i=0; i<n1.nom.length(); i++) {
-               if (n1.nom[i]>n2.nom[i]) return true;
-               if (n1.nom[i]<n2.nom[i]) return false;
+               if (n1.nom[i]>n2.nom[i]) return num1.pos;
+               if (n1.nom[i]<n2.nom[i]) return !num1.pos;
            }
            return false;
        }
