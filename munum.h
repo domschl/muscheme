@@ -145,7 +145,7 @@ munum muipsub(munum num1, munum num2) {
     rp.den=num1.den;
     rp.pos=num1.pos;
     if (c!=0) {
-        for (int i=0; i<rn.nom.length(); i++) {
+        for (unsigned int i=0; i<rn.nom.length(); i++) {
             rn.nom[i]='9'-(rn.nom[i]-'0');
         }
         while (rn.nom[0]=='0') rn.nom=rn.nom.substr(1);
@@ -155,4 +155,12 @@ munum muipsub(munum num1, munum num2) {
     return rp;
 }
 
+munum muadd(munum num1, munum num2) {
+    if (num1.pos == num2.pos) {
+        return muipadd(num1,num2);
+    } else {
+        munum r=muipadd(num1,num2);
+        return r;  //XXX: wrong!
+    }
+}
 

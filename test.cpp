@@ -2,11 +2,11 @@
 
 typedef std::string string;
 
-int testit() {
+int testit(Muscheme &ms) {
     int errs=0;
     std::vector<string> ints{"0","01","23424","02020202","-1","-0","-923432"};
     for(auto const& it: ints) {
-        if (!isint(it)) {
+        if (!ms.isint(it)) {
             printf("Fail: %s is int!\n",it.c_str());
             ++errs;
         } else {
@@ -15,7 +15,7 @@ int testit() {
     }
     std::vector<string> nints{"0e","0.1","23a424","","-",".","e"}; 
     for (auto const& it: nints) {
-        if (isint(it)) {
+        if (ms.isint(it)) {
             printf("Fail: %s is NOT an int!\n",it.c_str());
             ++errs;
         } else {
@@ -24,7 +24,7 @@ int testit() {
     }
     std::vector<string> floats{"0","01","23424","02020202","-1","-0","-923432",".1","0.","-.1","-0.234","134.3233", ".0e4", "0e4","-1e3", "1E4", "1E-4", "-1.343e-32"};
     for(auto const& it: floats) {
-        if (!isfloat(it)) {
+        if (!ms.isfloat(it)) {
             printf("Fail: %s is float!\n",it.c_str());
             ++errs;
         } else {
@@ -33,7 +33,7 @@ int testit() {
     }
     std::vector<string> nfloats{"0e",".e10","-e23a424","","-",".","e","1.43.322","1e1e1","1e1.2"}; 
     for (auto const& it: nfloats) {
-        if (isfloat(it)) {
+        if (ms.isfloat(it)) {
             printf("Fail: %s is NOT a float!\n",it.c_str());
             ++errs;
         } else {
@@ -42,7 +42,7 @@ int testit() {
     }
    std::vector<string> strs{"\"\"", "\"asdf\"","\"a\\\"a\"","\"\\\"a\\\"\"","\"a a b\""};
     for(auto const& it: strs) {
-        if (!isstr(it)) {
+        if (!ms.isstr(it)) {
             printf("Fail: %s is str!\n",it.c_str());
             ++errs;
         } else {
@@ -51,7 +51,7 @@ int testit() {
     }
     std::vector<string> nstrs{"asdf","\"asfd\"asdf\"","\"asdf","asdf\"","","\"","\"\"\""};
     for (auto const& it: nstrs) {
-        if (isstr(it)) {
+        if (ms.isstr(it)) {
             printf("Fail: %s is NOT a str!\n",it.c_str());
             ++errs;
         } else {
@@ -61,7 +61,7 @@ int testit() {
     return errs;
 }
 
-int testnum() {
+int testnum(Muscheme &ms) {
     int errs=0;
     int i1,i2;
     munum a,b,c;
@@ -89,8 +89,9 @@ int testnum() {
 }
 
 int main(int argc, char *argv[]) {
-    int errs=testit();
-    errs+=testnum();
+    Muscheme ms;
+    int errs=testit(ms);
+    errs+=testnum(ms);
     if (errs==0) {
         printf("All tests passed!\n");
         return 0;

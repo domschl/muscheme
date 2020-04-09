@@ -8,13 +8,14 @@
 
 void repl(std::string prompt="μλ> ") {
     std::string cmd;
-    std::vector<astnode *> ast;
+    Muscheme ms;
+    std::vector<Muscheme::astnode *> ast;
     while (true) {
         std::cout << prompt;
         getline(std::cin, cmd);
         printf("%s\n",cmd.c_str());
         if (cmd=="(quit)") return;
-        ast=parse(cmd);
+        ast=ms.parse(cmd);
         for (auto ap : ast) {
             delete ap;
         }
