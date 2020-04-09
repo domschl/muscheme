@@ -90,6 +90,32 @@ int testnum(Muscheme &ms, int count=1000, bool verbose=false) {
     return errs;
 }
 
+int testcmpnum(Muscheme &ms, int count=1000, bool verbose=false) {
+    int errs=0;
+    int i1,i2;
+    munum a,b;
+    bool b1,b2,b3;
+    for (int i=0; i<count; i++) {
+        i1=rand()/2;
+        if (rand()%2) i1=(-1)*i1;
+        i2=rand()/2;
+        if (rand()%2) i2=(-1)*i2;
+        a=munum(i1);
+        b=munum(i2);
+        b1=a.mueq(a,a);
+        b2=b.mueq(b,b);
+        b3=a.mugr(a,b);
+        if ((i1>i2)!=b3 || !b1 || !b2) {
+             printf("Error: %d > %d == %s\n",i1,i2,b3?"true":"false");
+             if (b1 || b2) printf("EQ error!\n");
+             errs+=1;
+        } else {
+            if (verbose) printf("OK: %d > %d == %s\n",i1,i2,b3?"true":"false");
+        }
+    }
+    return errs;
+}
+
 int testnummul(Muscheme &ms, int count=1000, bool verbose=false) {
     int errs=0;
     int i1,i2;
@@ -118,6 +144,7 @@ int main(int argc, char *argv[]) {
     int errs=testit(ms);
     errs+=testnum(ms, 100);
     errs+=testnummul(ms,10000,true);
+    errs+=testcmpnum(ms,1000,true);
     if (errs==0) {
         printf("All tests passed!\n");
         return 0;

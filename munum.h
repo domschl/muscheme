@@ -69,12 +69,10 @@ struct munum {
         return("muBAD");
     }
 
-        int cmp(munum num1, munum num2) {
-        if (num1.pos != num2.pos) {
-            if (num1.pos) return 1;
-            else return -1;
-        }
-    return 0;
+    int cmp(munum num1, munum num2) {
+        if (mueq(num1,num2)) return 0;
+        if (mugr(num1,num2)) return 1;
+        return -1;
     }
 
     munum muipadd(munum num1, munum num2) {
@@ -251,6 +249,60 @@ struct munum {
         }
         acc.pos=(num1.pos==num2.pos);
         return acc;
+    }
+
+    munum fac(munum n) {
+        munum f(1);
+        return f;
+    }
+
+   bool mueq(munum num1, munum num2) {
+       if (num1.type!=mum_valid || num2.type!=mum_valid) return false;
+       if (num1.pos==num2.pos) {
+           if (num1.nom==num2.nom) {
+               if (num1.den==num2.den) return true;
+               else {
+                   munum n11(num1.nom), n12(num1.den), n21(num2.nom), n22(num2.den);
+                   munum n1,n2;
+                   n1=mumul(n11,n22);
+                   n2=mumul(n12,n21);
+                   if (n1.nom==n2.nom) return true;
+               }
+           }
+       }
+       return false;
+   }
+
+   bool mugr(munum num1, munum num2) {
+       if (num1.type!=mum_valid || num2.type!=mum_valid) return false;
+       if (num1.pos != num2.pos) return num1.pos;
+       if (num1.den==num2.den) {
+           if (num1.nom.length()>num2.nom.length()) return true;
+           if (num1.nom.length()<num2.nom.length()) return false;
+           for (unsigned int i=0; i<num1.nom.length(); i++) {
+               if (num1.nom[i]>num2.nom[i]) return true;
+               if (num1.nom[i]<num2.nom[i]) return false;
+           }
+           return false;
+       } else {
+           munum n11(num1.nom), n12(num1.den), n21(num2.nom), n22(num2.den);
+           munum n1,n2;
+           n1=mumul(n11,n22);
+           n2=mumul(n12,n21);
+           if (n1.nom.length()>n2.nom.length()) return true;
+           if (n1.nom.length()<n2.nom.length()) return false;
+           for (unsigned int i=0; i<n1.nom.length(); i++) {
+               if (n1.nom[i]>n2.nom[i]) return true;
+               if (n1.nom[i]<n2.nom[i]) return false;
+           }
+           return false;
+       }
+    }
+
+    bool mule(munum num1, munum num2) {
+        if (mueq(num1,num2)) return false;
+        if (mugr(num1,num2)) return false;
+        return true;
     }
 };
 
