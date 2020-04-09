@@ -113,7 +113,7 @@ struct munum {
         int l,l1,l2;
         int c=0,n1,n2,n3,n4,c2=0;
         munum rp,rn;
-        if (num1.den!=num2.den || num1.pos!=num2.pos || num1.type!=munum::mum_valid || num2.type!=munum::mum_valid) {
+        if (num1.den!=num2.den || !num1.pos || !num2.pos || num1.type!=munum::mum_valid || num2.type!=munum::mum_valid) {
             rp.to_nan();
             return rp;
         }
@@ -158,9 +158,32 @@ struct munum {
         if (num1.pos == num2.pos) {
             return muipadd(num1,num2);
         } else {
-            munum r=muipadd(num1,num2);
-            return r;  //XXX: wrong!
+            if (num1.pos) {
+                num2.pos=true;
+                return muipsub(num1,num2);
+            } else {
+                num1.pos=true;
+                return muipsub(num2,num1);
+            }
         }
+    }
+
+    munum musub(munum num1, munum num2) {
+        if (num1.pos && !num2.pos) {
+            num2.pos=true;
+            return muipadd(num1, num2);
+        }
+        if (num1.pos && num2.pos) {
+            return muipsub(num1,num2);
+        }
+        if (!num1.pos && num2.pos) {
+            num2.pos=false;
+            return muipadd(num1,num2);
+        }
+        // if (!num1.pos && !num2.pos) 
+        munum r;
+        num1.pos=true; num2.pos=true;
+        return muipsub(num2, num1);
     }
 };
 

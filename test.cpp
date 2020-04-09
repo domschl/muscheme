@@ -67,22 +67,24 @@ int testnum(Muscheme &ms) {
     munum a,b,c;
     for (int i=0; i<1000000; i++) {
         i1=rand()/2;
+        if (rand()%2) i1=(-1)*i1;
         i2=rand()/2;
+        if (rand()%2) i2=(-1)*i2;
         a=munum(i1);
         b=munum(i2);
-        c=a.muipadd(a,b);
+        c=a.muadd(a,b);
         if (i1+i2!=atoi(c.str().c_str())) {
-             printf("Error: %d+%d=%d, not %s %s\n",i1,i2,i1+i2,c.str().c_str(),c.nom.c_str());
+             printf("Error: %d + %d = %d, not %s %s\n",i1,i2,i1+i2,c.str().c_str(),c.nom.c_str());
              errs+=1;
         } else {
-             printf("OK: %d+%d=%d, %s\n",i1,i2,i1+i2,c.str().c_str());
+             printf("OK: %d + %d = %d, %s\n",i1,i2,i1+i2,c.str().c_str());
         }
-        c=a.muipsub(a,b);
+        c=a.musub(a,b);
         if (i1-i2!=atoi(c.str().c_str())) {
-             printf("Error: %d-%d=%d, not %s %s\n",i1,i2,i1-i2,c.str().c_str(),c.nom.c_str());
+             printf("Error: %d - %d = %d, not %s %s\n",i1,i2,i1-i2,c.str().c_str(),c.nom.c_str());
              errs+=1;
         } else {
-             printf("OK: %d-%d=%d, %s\n",i1,i2,i1-i2,c.str().c_str());
+             printf("OK: %d - %d = %d, %s\n",i1,i2,i1-i2,c.str().c_str());
         }
     }
     return errs;
