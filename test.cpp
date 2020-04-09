@@ -2,7 +2,7 @@
 
 typedef std::string string;
 
-int testit(Muscheme &ms) {
+int testit(Muscheme &ms, bool verbose=false) {
     int errs=0;
     std::vector<string> ints{"0","01","23424","02020202","-1","-0","-923432"};
     for(auto const& it: ints) {
@@ -10,7 +10,7 @@ int testit(Muscheme &ms) {
             printf("Fail: %s is int!\n",it.c_str());
             ++errs;
         } else {
-            printf("OK: %s is int.\n",it.c_str());
+            if (verbose) printf("OK: %s is int.\n",it.c_str());
         }
     }
     std::vector<string> nints{"0e","0.1","23a424","","-",".","e"}; 
@@ -19,7 +19,7 @@ int testit(Muscheme &ms) {
             printf("Fail: %s is NOT an int!\n",it.c_str());
             ++errs;
         } else {
-            printf("OK: %s is not an int.\n",it.c_str());
+            if (verbose) printf("OK: %s is not an int.\n",it.c_str());
         }
     }
     std::vector<string> floats{"0","01","23424","02020202","-1","-0","-923432",".1","0.","-.1","-0.234","134.3233", ".0e4", "0e4","-1e3", "1E4", "1E-4", "-1.343e-32"};
@@ -28,7 +28,7 @@ int testit(Muscheme &ms) {
             printf("Fail: %s is float!\n",it.c_str());
             ++errs;
         } else {
-            printf("OK: %s is float.\n",it.c_str());
+            if (verbose) printf("OK: %s is float.\n",it.c_str());
         }
     }
     std::vector<string> nfloats{"0e",".e10","-e23a424","","-",".","e","1.43.322","1e1e1","1e1.2"}; 
@@ -37,7 +37,7 @@ int testit(Muscheme &ms) {
             printf("Fail: %s is NOT a float!\n",it.c_str());
             ++errs;
         } else {
-            printf("OK: %s is not a float.\n",it.c_str());
+            if (verbose) printf("OK: %s is not a float.\n",it.c_str());
         }
     }
    std::vector<string> strs{"\"\"", "\"asdf\"","\"a\\\"a\"","\"\\\"a\\\"\"","\"a a b\""};
@@ -46,7 +46,7 @@ int testit(Muscheme &ms) {
             printf("Fail: %s is str!\n",it.c_str());
             ++errs;
         } else {
-            printf("OK: %s is str.\n",it.c_str());
+            if (verbose) printf("OK: %s is str.\n",it.c_str());
         }
     }
     std::vector<string> nstrs{"asdf","\"asfd\"asdf\"","\"asdf","asdf\"","","\"","\"\"\""};
@@ -55,17 +55,17 @@ int testit(Muscheme &ms) {
             printf("Fail: %s is NOT a str!\n",it.c_str());
             ++errs;
         } else {
-            printf("OK: %s is not a str.\n",it.c_str());
+            if (verbose) printf("OK: %s is not a str.\n",it.c_str());
         }
     }
     return errs;
 }
 
-int testnum(Muscheme &ms) {
+int testnum(Muscheme &ms, int count=1000, bool verbose=false) {
     int errs=0;
     int i1,i2;
     munum a,b,c;
-    for (int i=0; i<1000000; i++) {
+    for (int i=0; i<count; i++) {
         i1=rand()/2;
         if (rand()%2) i1=(-1)*i1;
         i2=rand()/2;
@@ -77,14 +77,14 @@ int testnum(Muscheme &ms) {
              printf("Error: %d + %d = %d, not %s %s\n",i1,i2,i1+i2,c.str().c_str(),c.nom.c_str());
              errs+=1;
         } else {
-             printf("OK: %d + %d = %d, %s\n",i1,i2,i1+i2,c.str().c_str());
+            if (verbose) printf("OK: %d + %d = %d, %s\n",i1,i2,i1+i2,c.str().c_str());
         }
         c=a.musub(a,b);
         if (i1-i2!=atoi(c.str().c_str())) {
              printf("Error: %d - %d = %d, not %s %s\n",i1,i2,i1-i2,c.str().c_str(),c.nom.c_str());
              errs+=1;
         } else {
-             printf("OK: %d - %d = %d, %s\n",i1,i2,i1-i2,c.str().c_str());
+            if (verbose) printf("OK: %d - %d = %d, %s\n",i1,i2,i1-i2,c.str().c_str());
         }
     }
     return errs;
@@ -93,7 +93,7 @@ int testnum(Muscheme &ms) {
 int main(int argc, char *argv[]) {
     Muscheme ms;
     int errs=testit(ms);
-    errs+=testnum(ms);
+    errs+=testnum(ms, 1000000);
     if (errs==0) {
         printf("All tests passed!\n");
         return 0;
