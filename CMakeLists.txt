@@ -20,6 +20,8 @@ project(muscheme)
 # include_directories(../..)
 
 add_executable(muscheme muscheme.cpp)
+add_executable (test test.cpp)
 
+set_property(TARGET test PROPERTY CXX_STANDARD 11)
 set_property(TARGET muscheme PROPERTY CXX_STANDARD 11)
 
