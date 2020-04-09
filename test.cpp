@@ -153,6 +153,9 @@ int main(int argc, char *argv[]) {
     errs+=testnummul(ms,10000,true);
     errs+=testcmpnum(ms,1000,true);
     dofacs(100);
+    int n=1000;
+    munum a;
+    printf("%d! = %s\n",n,a.mufac(munum(n)).str().c_str());
     if (errs==0) {
         printf("All tests passed!\n");
         return 0;
