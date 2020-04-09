@@ -149,6 +149,7 @@ struct munum {
             rn.pos=!rn.pos;
             return rn;
         }
+        while (rp.nom[0]=='0') rp.nom=rp.nom.substr(1);
         return rp;
     }
 
@@ -191,7 +192,7 @@ struct munum {
             acc.to_nan();
             return acc;
         }
-        for (int i=0; i<num2.nom.length(); i++) {
+        for (unsigned int i=0; i<num2.nom.length(); i++) {
             ind=num2.nom.length()-1-i;
             mi=num2.nom[ind]-'0';
             if (mi==0) continue;
@@ -242,7 +243,7 @@ struct munum {
                     acc.to_nan();
                     return acc;
             }
-            for (int j=0; j<i; j++) {
+            for (unsigned int j=0; j<i; j++) {
                 ai.nom += "0";
             }
             acc=muadd(acc,ai);
@@ -251,9 +252,19 @@ struct munum {
         return acc;
     }
 
-    munum fac(munum n) {
+    munum mufac(munum n) {
         munum f(1);
-        return f;
+        if (n.type!=mum_valid || mule(n,munum(0)) || n.den!="1") {
+            f.to_nan();
+            return(f);
+        }
+        if (mueq(n,0)) return munum(1);
+        while (true) {
+            f=mumul(f,n);
+            //printf("   %s - %s\n",n.str().c_str(),f.str().c_str());
+            n=musub(n,munum(1));
+            if (muleq(n,munum(1))) return f;
+        }
     }
 
    bool mueq(munum num1, munum num2) {
@@ -299,10 +310,18 @@ struct munum {
        }
     }
 
+    bool mugre(munum num1, munum num2) {
+        return (mugr(num1,num2) || mueq(num1,num2));
+    }
+
     bool mule(munum num1, munum num2) {
         if (mueq(num1,num2)) return false;
         if (mugr(num1,num2)) return false;
         return true;
+    }
+
+    bool muleq(munum num1, munum num2) {
+        return !mugr(num1,num2);
     }
 };
 

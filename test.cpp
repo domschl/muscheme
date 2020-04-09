@@ -138,6 +138,13 @@ int testnummul(Muscheme &ms, int count=1000, bool verbose=false) {
     return errs;
 }
 
+void dofacs(int n=100) {
+    munum a;
+    for (int i=-10; i<=n; i++) {
+        a=a.mufac(munum(i));
+        printf("fac(%d)=%s\n",i,a.str().c_str());
+    }
+}
 
 int main(int argc, char *argv[]) {
     Muscheme ms;
@@ -145,6 +152,7 @@ int main(int argc, char *argv[]) {
     errs+=testnum(ms, 100);
     errs+=testnummul(ms,10000,true);
     errs+=testcmpnum(ms,1000,true);
+    dofacs(100);
     if (errs==0) {
         printf("All tests passed!\n");
         return 0;
