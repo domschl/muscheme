@@ -90,10 +90,34 @@ int testnum(Muscheme &ms, int count=1000, bool verbose=false) {
     return errs;
 }
 
+int testnummul(Muscheme &ms, int count=1000, bool verbose=false) {
+    int errs=0;
+    int i1,i2;
+    munum a,b,c;
+    for (int i=0; i<count; i++) {
+        i1=rand()%10000;
+        if (rand()%2) i1=(-1)*i1;
+        i2=rand()%10000;
+        if (rand()%2) i2=(-1)*i2;
+        a=munum(i1);
+        b=munum(i2);
+        c=a.mumul(a,b);
+        if (i1*i2!=atoi(c.str().c_str())) {
+             printf("Error: %d * %d = %d, not %s %s\n",i1,i2,i1*i2,c.str().c_str(),c.nom.c_str());
+             errs+=1;
+        } else {
+            if (verbose) printf("OK: %d * %d = %d, %s\n",i1,i2,i1*i2,c.str().c_str());
+        }
+    }
+    return errs;
+}
+
+
 int main(int argc, char *argv[]) {
     Muscheme ms;
     int errs=testit(ms);
-    errs+=testnum(ms, 1000000);
+    errs+=testnum(ms, 100);
+    errs+=testnummul(ms,10000,true);
     if (errs==0) {
         printf("All tests passed!\n");
         return 0;

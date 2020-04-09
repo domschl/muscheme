@@ -185,5 +185,72 @@ struct munum {
         num1.pos=true; num2.pos=true;
         return muipsub(num2, num1);
     }
+
+    munum mumul( munum num1, munum num2) {
+        munum acc(0),ai,ai2;
+        int mi,ind;
+        if (num1.den!="1" || num2.den!="1" || num1.type!=munum::mum_valid || num2.type!=munum::mum_valid) {
+            acc.to_nan();
+            return acc;
+        }
+        for (int i=0; i<num2.nom.length(); i++) {
+            ind=num2.nom.length()-1-i;
+            mi=num2.nom[ind]-'0';
+            if (mi==0) continue;
+            switch (mi) {
+                case 1:
+                    ai=num1;
+                    break;
+                case 2:
+                    ai=muadd(num1, num1);
+                    break;
+                case 3:
+                    ai=muadd(num1,num1);
+                    ai=muadd(num1,ai);
+                    break;
+                case 4:
+                    ai=muadd(num1,num1);
+                    ai=muadd(ai,ai);
+                    break;
+                case 5:
+                    ai=muadd(num1,num1);
+                    ai=muadd(ai,ai);
+                    ai=muadd(ai,num1);
+                    break;
+                case 6:
+                    ai=muadd(num1,num1);
+                    ai2=muadd(ai,ai);
+                    ai=muadd(ai,ai2);
+                    break;
+                case 7:
+                    ai=muadd(num1,num1);
+                    ai2=muadd(ai,ai);
+                    ai=muadd(ai,ai2);
+                    ai=muadd(ai,num1);
+                    break;
+                case 8:
+                    ai=muadd(num1,num1);
+                    ai=muadd(ai,ai);
+                    ai=muadd(ai,ai);
+                    break;
+                case 9:
+                    ai=muadd(num1,num1);
+                    ai=muadd(ai,ai);
+                    ai=muadd(ai,ai);
+                    ai=muadd(ai,num1);
+                    break;
+                default:
+                    printf("Illegal numeric digit: %d\n", mi);
+                    acc.to_nan();
+                    return acc;
+            }
+            for (int j=0; j<i; j++) {
+                ai.nom += "0";
+            }
+            acc=muadd(acc,ai);
+        }
+        acc.pos=(num1.pos==num2.pos);
+        return acc;
+    }
 };
 
