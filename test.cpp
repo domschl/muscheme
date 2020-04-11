@@ -197,14 +197,14 @@ int testnummul(Muscheme &ms, int count=1000, bool verbose=false) {
     return errs;
 }
 
-int testmuipdiv(Muscheme &ms, int count=1000, bool verbose=false) {
+int testmuipdiv(Muscheme &ms, int count=1000, bool verbose=false, bool posneg=true) {
     int errs=0;
     int i1,i2,pi2,dv;
     munum a,b,pb;
     std::vector<munum> res;
     for (int i=0; i<count; i++) {
-        i1=nrand(8,true);
-        i2=nrand(8,true);
+        i1=nrand(8,posneg);
+        i2=nrand(8,posneg);
         pi2=i2;
         a=munum(i1);
         b=munum(i2);
@@ -213,7 +213,7 @@ int testmuipdiv(Muscheme &ms, int count=1000, bool verbose=false) {
             if (verbose) printf("Skipping /0 tests for now.\n");
             continue;
         }
-        res=a.muipdiv(a,b);
+        res=a.muipdivmod(a,b);
         dv=i1/i2;
         if (dv!=atoi(res[0].str().c_str())) {
             printf("Error %d / %d = %d, not %s\n",i1,i2,dv,res[0].str().c_str());
@@ -221,7 +221,7 @@ int testmuipdiv(Muscheme &ms, int count=1000, bool verbose=false) {
         } else {
             if (verbose) printf("OK %d / %d = %d, %s\n",i1,i2,dv,res[0].str().c_str());
         }
-        res=a.muipdiv(a,pb);
+        res=a.muipdivmod(a,pb);
         dv=i1%pi2;
         if (dv!=atoi(res[1].str().c_str())) {
             printf("Error %d mod %d = %d, not %s\n",i1,pi2,dv,res[1].str().c_str());
@@ -275,7 +275,7 @@ int main(int argc, char *argv[]) {
     errs+=testnum(ms, n, verbose);
     errs+=testcmpnum(ms,n, verbose);
     errs+=testnummul(ms,n, verbose);
-    errs+=testmuipdiv(ms,n, verbose);
+    errs+=testmuipdiv(ms,n, verbose,false);
     dofacs(100,verbose);
     errs+=testbigfac1000(verbose);
     if (errs==0) {
