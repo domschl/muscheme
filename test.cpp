@@ -103,14 +103,43 @@ int testcmpnum(Muscheme &ms, int count=1000, bool verbose=false) {
         a=munum(i1);
         b=munum(i2);
         b1=a.mueq(a,a);
-        b2=b.mueq(b,b);
-        b3=a.mugr(a,b);
-        if ((i1>i2)!=b3 || !b1 || !b2) {
-             printf("Error: %d > %d == %s\n",i1,i2,b3?"true":"false");
-             if (!b1 || !b2) printf("EQ error!\n");
-             errs+=1;
+        if (!b1) {
+            errs+=1;
+            printf("Error: %d == %d: %s\n", i1,i1, b1?"true": "false");
         } else {
-            if (verbose) printf("OK: %d > %d == %s\n",i1,i2,b3?"true":"false");
+            if (verbose) printf("OK: %d == %d: %s\n", i1, i1, b1?"true": "false");
+        }
+        b2=b.mueq(b,b);
+        if (!b2) {
+            errs+=1;
+            printf("Error: %d == %d: %s\n", i2,i2, b2?"true": "false");
+        } else {
+            if (verbose) printf("OK: %d == %d: %s\n", i2, i2, b2?"true": "false");
+        }
+        if (i1!=i2) {
+            b1=a.mueq(a,b);
+            if (b1) {
+                errs+=1;
+                printf("Error: %d == %d: %s\n", i1,i2, b1?"true": "false");
+            } else {
+                if (verbose) printf("OK: %d == %d: %s\n", i1, i2, b1?"true": "false");
+            }
+            b1=a.mune(a,b);
+            if (!b1) {
+                errs+=1;
+                printf("Error: %d != %d: %s\n", i1,i2, b1?"true": "false");
+            } else {
+                if (verbose) printf("OK: %d != %d: %s\n", i1, i2, b1?"true": "false");
+            }
+        }
+
+        b3=a.mugt(a,b);
+        if ((i1>i2)!=b3 || !b1 || !b2) {
+            printf("Error: %d > %d == %s\n",i1,i2,b3?"true":"false");
+            if (!b1 || !b2) printf("EQ error!\n");
+            errs+=1;
+        } else {
+           if (verbose) printf("OK: %d > %d == %s\n",i1,i2,b3?"true":"false");
         }
     }
     return errs;
