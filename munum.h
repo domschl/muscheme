@@ -367,37 +367,56 @@ struct munum {
 
     std::vector<munum> muipdiv(munum num1, munum num2) {
         munum r(0),q(0);
-        int l1,l2;
+        int dl;
         std::vector<munum> res(2);
         if (num1.den!=num2.den || num1.pos!=num2.pos || num1.type!=munum::mum_valid || num2.type!=munum::mum_valid) {
             r.to_nan();
+            q.to_nan();
             res[0]=q;
             res[1]=r;
             return res;
         }
         munum n1,n2;
         n1=num1, n2=num2;
+        dl=n1.nom.length()-n2.nom.length();
         while (true) {
-            if (mugt(n2,n1)) {
+            //printf("%s %s\n",q.nom, r.nom);
+            if (mugt(n2,n1) || dl<0) {
                 r=n1;
                 res[0]=q;
                 res[1]=r;
                 return res;
             }
-            l1=n1.nom.length();
-            l2=n2.nom.length();
-            munum n1t(n1.nom.substr(0,l2));
-            int n=0;
-            while (muge(n1t,n2)) {
-                musub(n1t,n2);
-                ++n;
+            string pad="";
+            for (int i=0; i<dl; i++) pad+="0";
+            munum sb(n2.nom+pad);
+            while (muge(n1,sb)) {
+                n1=musub(n1,sb);
+                q=muadd(q,munum("1"+pad));
             }
-            
-            
-
+            --dl;
         }
         res[0]=q;
         res[1]=r;       
         return res;
+    }
+    std::vector<munum> mudivmod(munum num1, munum num2) {
+        munum q(0), r(0);
+        std::vector<munum> res(2);
+        if (num1.type!=munum::mum_valid || num2.type!=munum::mum_valid) {
+            q.to_nan();
+            r.to_nan();
+            res[0]=q;
+            res[1]=r;
+            return res;
+        }
+        bool s1,s2;
+        s1=num1.pos;
+        s2=num2.pos;
+        num1.pos=true;
+        num2.pos=true;
+        munum n1(num1.nom), n2(num2.nom);
+        res=muipdiv(n1,n2);
+        // XXX incompl.
     }
 };
