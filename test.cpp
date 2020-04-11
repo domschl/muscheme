@@ -61,15 +61,25 @@ int testit(Muscheme &ms, bool verbose=false) {
     return errs;
 }
 
+int nrand(int max_digits=8, bool posneg=true) {
+    int digs[]={10,100,1000,10000,100000,1000000,10000000,100000000,1000000000};
+    if (max_digits<1 || max_digits>9) max_digits=9;
+    int d=rand()%max_digits;
+    int modw=digs[d];
+    int r=rand()%modw;
+    if (posneg) {
+        if (rand()%2) r=r*(-1);
+    }
+    return r;
+}
+
 int testnum(Muscheme &ms, int count=1000, bool verbose=false) {
     int errs=0;
     int i1,i2;
     munum a,b,c;
     for (int i=0; i<count; i++) {
-        i1=rand()/2;
-        if (rand()%2) i1=(-1)*i1;
-        i2=rand()/2;
-        if (rand()%2) i2=(-1)*i2;
+        i1=nrand();
+        i2=nrand();
         a=munum(i1);
         b=munum(i2);
         c=a.muadd(a,b);
@@ -96,10 +106,8 @@ int testcmpnum(Muscheme &ms, int count=1000, bool verbose=false) {
     munum a,b;
     bool b1,b2,b3;
     for (int i=0; i<count; i++) {
-        i1=rand()/2;
-        if (rand()%2) i1=(-1)*i1;
-        i2=rand()/2;
-        if (rand()%2) i2=(-1)*i2;
+        i1=nrand();
+        i2=nrand();
         a=munum(i1);
         b=munum(i2);
         b1=a.mueq(a,a);
@@ -150,10 +158,8 @@ int testnummul(Muscheme &ms, int count=1000, bool verbose=false) {
     int i1,i2;
     munum a,b,c;
     for (int i=0; i<count; i++) {
-        i1=rand()%10000;
-        if (rand()%2) i1=(-1)*i1;
-        i2=rand()%10000;
-        if (rand()%2) i2=(-1)*i2;
+        i1=nrand(4);
+        i2=nrand(4);
         a=munum(i1);
         b=munum(i2);
         c=a.mumul(a,b);
@@ -190,12 +196,27 @@ int testbigfac1000(int verbose=false) {
 
 int main(int argc, char *argv[]) {
     Muscheme ms;
+    bool verbose=false;
+    bool big=false;
+    for (int i=1; i<argc; i++) {
+        if (!strcmp(argv[i],"-v")) verbose=true;
+        if (!strcmp(argv[i],"-b")) big=true;
+        if (!strcmp(argv[i],"-h") || !strcmp(argv[i],"--help")) {
+            printf("test [-v] [-b] [-h]\n");
+            printf("  -v: show all tests (verbose mode)\n");
+            printf("  -b: perform large test with many samples\n");
+            printf("  -h: this message\n");
+            return 0;
+         }
+    }
+    int n=100;
+    if (big) n=1000000;
     int errs=testit(ms);
-    errs+=testnum(ms, 100);
-    errs+=testnummul(ms,1000);
-    errs+=testcmpnum(ms,1000);
-    dofacs(100);
-    errs+=testbigfac1000();
+    errs+=testnum(ms, n, verbose);
+    errs+=testnummul(ms,n, verbose);
+    errs+=testcmpnum(ms,n, verbose);
+    dofacs(100,verbose);
+    errs+=testbigfac1000(verbose);
     if (errs==0) {
         printf("All tests passed!\n");
         return 0;
