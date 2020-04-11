@@ -142,12 +142,36 @@ int testcmpnum(Muscheme &ms, int count=1000, bool verbose=false) {
         }
 
         b3=a.mugt(a,b);
-        if ((i1>i2)!=b3 || !b1 || !b2) {
+        if ((i1>i2)!=b3) {
             printf("Error: %d > %d == %s\n",i1,i2,b3?"true":"false");
             if (!b1 || !b2) printf("EQ error!\n");
             errs+=1;
         } else {
            if (verbose) printf("OK: %d > %d == %s\n",i1,i2,b3?"true":"false");
+        }
+        b3=a.muge(a,b);
+        if ((i1>=i2)!=b3) {
+            printf("Error: %d >= %d == %s\n",i1,i2,b3?"true":"false");
+            if (!b1 || !b2) printf("EQ error!\n");
+            errs+=1;
+        } else {
+           if (verbose) printf("OK: %d >= %d == %s\n",i1,i2,b3?"true":"false");
+        }
+        b3=a.mult(a,b);
+        if ((i1<i2)!=b3) {
+            printf("Error: %d < %d == %s\n",i1,i2,b3?"true":"false");
+            if (!b1 || !b2) printf("EQ error!\n");
+            errs+=1;
+        } else {
+           if (verbose) printf("OK: %d < %d == %s\n",i1,i2,b3?"true":"false");
+        }
+        b3=a.mule(a,b);
+        if ((i1<=i2)!=b3) {
+            printf("Error: %d <= %d == %s\n",i1,i2,b3?"true":"false");
+            if (!b1 || !b2) printf("EQ error!\n");
+            errs+=1;
+        } else {
+           if (verbose) printf("OK: %d <= %d == %s\n",i1,i2,b3?"true":"false");
         }
     }
     return errs;
