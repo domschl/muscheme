@@ -443,12 +443,18 @@ struct munum {
         num2.pos=true;
         munum n1(num1.nom), n2(num2.nom);
         res=muipdivmod(n1,n2);
-        // XXX incompl.
+        if (s1!=s2) {
+            res[0].pos=false;
+        }
+        if (!s1) {
+            res[1].pos=false;
+        }
+        return res;
     }
 
     munum mudiv(munum num1, munum num2) {
         munum q(0), r(0);
-        std::vector<munum> res(2);
+        std::vector<munum> res;
         if (num1.type!=munum::mum_valid || num2.type!=munum::mum_valid) {
             q.to_nan();
             r.to_nan();
@@ -456,19 +462,16 @@ struct munum {
             res[1]=r;
             return res[0];
         }
-        bool s1,s2;
-        s1=num1.pos;
-        s2=num2.pos;
         num1.pos=true;
         num2.pos=true;
         munum n1(num1.nom), n2(num2.nom);
-        res=muipdivmod(n1,n2);
+        res=mudivmod(n1,n2);
         return res[0];
     }
 
     munum mumod(munum num1, munum num2) {
         munum q(0), r(0);
-        std::vector<munum> res(2);
+        std::vector<munum> res;
         if (num1.type!=munum::mum_valid || num2.type!=munum::mum_valid) {
             q.to_nan();
             r.to_nan();
@@ -476,13 +479,10 @@ struct munum {
             res[1]=r;
             return res[1];
         }
-        bool s1,s2;
-        s1=num1.pos;
-        s2=num2.pos;
         num1.pos=true;
         num2.pos=true;
         munum n1(num1.nom), n2(num2.nom);
-        res=muipdivmod(n1,n2);
+        res=mudivmod(n1,n2);
         return res[1];
     }
 };

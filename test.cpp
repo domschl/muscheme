@@ -213,7 +213,7 @@ int testmuipdiv(Muscheme &ms, int count=1000, bool verbose=false, bool posneg=tr
             if (verbose) printf("Skipping /0 tests for now.\n");
             continue;
         }
-        res=a.muipdivmod(a,b);
+        res=a.mudivmod(a,b);
         dv=i1/i2;
         if (dv!=atoi(res[0].str().c_str())) {
             printf("Error %d / %d = %d, not %s\n",i1,i2,dv,res[0].str().c_str());
@@ -221,7 +221,7 @@ int testmuipdiv(Muscheme &ms, int count=1000, bool verbose=false, bool posneg=tr
         } else {
             if (verbose) printf("OK %d / %d = %d, %s\n",i1,i2,dv,res[0].str().c_str());
         }
-        res=a.muipdivmod(a,pb);
+        res=a.mudivmod(a,pb);
         dv=i1%pi2;
         if (dv!=atoi(res[1].str().c_str())) {
             printf("Error %d mod %d = %d, not %s\n",i1,pi2,dv,res[1].str().c_str());
@@ -275,7 +275,7 @@ int main(int argc, char *argv[]) {
     errs+=testnum(ms, n, verbose);
     errs+=testcmpnum(ms,n, verbose);
     errs+=testnummul(ms,n, verbose);
-    errs+=testmuipdiv(ms,n, verbose,false);
+    errs+=testmuipdiv(ms,n, verbose,true);
     dofacs(100,verbose);
     errs+=testbigfac1000(verbose);
     if (errs==0) {
