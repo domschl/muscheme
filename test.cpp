@@ -199,9 +199,9 @@ int testnummul(Muscheme &ms, int count=1000, bool verbose=false) {
 
 int testmuipdiv(Muscheme &ms, int count=1000, bool verbose=false, bool posneg=true) {
     int errs=0;
-    int i1,i2,pi2,dv;
-    munum a,b,pb;
-    std::vector<munum> res;
+    int i1,i2,pi2,dv,md,mdp;
+    munum a,b,pb,q,r;
+    std::vector<munum> res,resp;
     for (int i=0; i<count; i++) {
         i1=nrand(8,posneg);
         i2=nrand(8,posneg);
@@ -221,13 +221,29 @@ int testmuipdiv(Muscheme &ms, int count=1000, bool verbose=false, bool posneg=tr
         } else {
             if (verbose) printf("OK %d / %d = %d, %s\n",i1,i2,dv,res[0].str().c_str());
         }
-        res=a.mudivmod(a,pb);
-        dv=i1%pi2;
-        if (dv!=atoi(res[1].str().c_str())) {
-            printf("Error %d mod %d = %d, not %s\n",i1,pi2,dv,res[1].str().c_str());
+        resp=a.mudivmod(a,pb);
+        mdp=i1%pi2;
+        md=i1%i2;
+        if (mdp!=atoi(resp[1].str().c_str())) {
+            printf("Error %d mod %d = %d, not %s\n",i1,pi2,mdp,resp[1].str().c_str());
             errs+=1;
         } else {
-            if (verbose) printf("OK %d mod %d = %d, %s\n",i1,pi2,dv,res[1].str().c_str());
+            if (verbose) printf("OK %d mod %d = %d, %s\n",i1,pi2,mdp,resp[1].str().c_str());
+        }
+
+        q=a.mudiv(a,b);
+        r=a.mumod(a,b);
+         if (q.str() != res[0].str()) {
+           printf("Error %d div %d = %d, not %s,%s\n",i1,i2,dv,q.str().c_str(),res[0].str().c_str());
+          errs+=1;
+        } else {
+           if (verbose) printf("OK %d div %d = %d, %s\n", i1,i2,dv,q.str().c_str());
+        }
+        if (r.str() != res[1].str()) {
+           printf("Error %d mod %d = %d, not %s,%s\n",i1,i2,md,r.str().c_str(),res[1].str().c_str());
+          errs+=1;
+        } else {
+           if (verbose) printf("OK %d mod %d = %d, %s\n", i1,i2,md,r.str().c_str());
         }
     }
     return errs;

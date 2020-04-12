@@ -143,7 +143,7 @@ struct munum {
             rn.pos=!rn.pos;
             return rn;
         }
-        while (rp.nom[0]=='0') rp.nom=rp.nom.substr(1);
+        while (rp.nom[0]=='0' && rp.nom.length()>1) rp.nom=rp.nom.substr(1);
         return rp;
     }
 
@@ -248,35 +248,19 @@ struct munum {
 
     munum mufac(munum n) {
         munum f(1);
-        if (n.type!=mum_valid || mule(n,munum(0)) || n.den!="1") {
+        if (n.type!=mum_valid || mult(n,munum(0)) || n.den!="1") {
             f.to_nan();
             return(f);
         }
-        if (mueq(n,0)) return munum(1);
+        if (mueq(n,munum(0))) return munum(1);
         while (true) {
             f=mumul(f,n);
-            //printf("   %s - %s\n",n.str().c_str(),f.str().c_str());
             n=musub(n,munum(1));
             if (mule(n,munum(1))) return f;
         }
     }
 
    bool mueq(munum num1, munum num2) {
-   /*    if (num1.type!=mum_valid || num2.type!=mum_valid) return false;
-       if (num1.pos==num2.pos) {
-           if (num1.nom==num2.nom) {
-               if (num1.den==num2.den) return true;
-               else {
-                   munum n11(num1.nom), n12(num1.den), n21(num2.nom), n22(num2.den);
-                   munum n1,n2;
-                   n1=mumul(n11,n22);
-                   n2=mumul(n12,n21);
-                   if (n1.nom==n2.nom) return true;
-               }
-           }
-       }
-       return false;
-   */
        if (mucmp(num1,num2)==0) return true; else return false;
    }
 
@@ -312,55 +296,19 @@ struct munum {
     }
 
    bool mugt(munum num1, munum num2) {
-       /*
-       if (num1.type!=mum_valid || num2.type!=mum_valid) return false;
-       if (num1.pos != num2.pos) return num1.pos;
-       if (num1.den==num2.den) {
-           if (num1.nom.length()>num2.nom.length()) return num1.pos;
-           if (num1.nom.length()<num2.nom.length()) return !num1.pos;
-           for (unsigned int i=0; i<num1.nom.length(); i++) {
-               if (num1.nom[i]>num2.nom[i]) return num1.pos;
-               if (num1.nom[i]<num2.nom[i]) return !num1.pos;
-           }
-           return false;
-       } else {
-           munum n11(num1.nom), n12(num1.den), n21(num2.nom), n22(num2.den);
-           munum n1,n2;
-           n1=mumul(n11,n22);
-           n2=mumul(n12,n21);
-           if (n1.nom.length()>n2.nom.length()) return num1.pos;
-           if (n1.nom.length()<n2.nom.length()) return !num1.pos;
-           for (unsigned int i=0; i<n1.nom.length(); i++) {
-               if (n1.nom[i]>n2.nom[i]) return num1.pos;
-               if (n1.nom[i]<n2.nom[i]) return !num1.pos;
-           }
-           return false;
-       }
-       */
        if (mucmp(num1,num2)==1) return true; else return false;
     }
 
     bool muge(munum num1, munum num2) {
-        /*
-        return (mugr(num1,num2) || mueq(num1,num2));
-        */
         int c=mucmp(num1, num2);
         if (c==1 || c==0) return true; else return false;
     }
 
     bool mult(munum num1, munum num2) {
-        /*
-        if (mueq(num1,num2)) return false;
-        if (mugr(num1,num2)) return false;
-        return true;
-        */
         if (mucmp(num1,num2)==-1) return true; else return false;
     }
 
     bool mule(munum num1, munum num2) {
-        /* 
-        return !mugr(num1,num2);
-        */
         int c=mucmp(num1, num2);
         if (c==-1 || c==0) return true; else return false;
     }
@@ -444,7 +392,7 @@ struct munum {
         munum n1(num1.nom), n2(num2.nom);
         res=muipdivmod(n1,n2);
         if (s1!=s2) {
-            res[0].pos=false;
+            if (res[0].nom!="0") res[0].pos=false;
         }
         if (!s1) {
             res[1].pos=false;
@@ -462,10 +410,7 @@ struct munum {
             res[1]=r;
             return res[0];
         }
-        num1.pos=true;
-        num2.pos=true;
-        munum n1(num1.nom), n2(num2.nom);
-        res=mudivmod(n1,n2);
+        res=mudivmod(num1,num2);
         return res[0];
     }
 
@@ -479,10 +424,7 @@ struct munum {
             res[1]=r;
             return res[1];
         }
-        num1.pos=true;
-        num2.pos=true;
-        munum n1(num1.nom), n2(num2.nom);
-        res=mudivmod(n1,n2);
+        res=mudivmod(num1,num2);
         return res[1];
     }
 };
