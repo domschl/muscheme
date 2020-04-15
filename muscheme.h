@@ -303,15 +303,60 @@ class Muscheme {
                         pastnode->val=malloc(pastnode->size);
                         ival=atoi(toks[i].c_str());
                         std::memcpy(pastnode->val,(const void *)&ival,sizeof(pastnode->size));
+                        ast.push_back(pastnode);
+                        if (plast!=nullptr) plast->right=pastnode;
+                        plast=pastnode;
+                        break;
+                    case atom::symbol:
+                        pastnode=new astnode();
+                        pastnode->type=atom::symbol;
+                        pastnode->size=strlen(toks[i].c_str())+1;
+                        pastnode->val=malloc(pastnode->size);
+                        strcpy((char *)pastnode->val,toks[i].c_str());
+                        ast.push_back(pastnode);
+                        if (plast!=nullptr) plast->right=pastnode;
+                        plast=pastnode;
                         break;
                     default:
                         printf("Huch! %s\n",atomnames[tt].c_str());
+                        val=false;
                         break;
                 }
+            }
+            if (!val) {
+                printf("Something isn't implemented yet, Can't run this.\n");
+            } else {
+                eval(ast);
             }
         }
         
         return ast;
     }
+
+    void eval(std::vector<astnode *> ast) {
+        astnode * past;
+        past=ast[0];
+        bool esc=false;
+        while (!esc) {
+            printf("%s ",atomnames[past->type].c_str());
+            if (past->down!=nullptr && past->right!=nullptr) {
+                printf("bad state: both right and down are pointers?!\n");
+                esc=true;
+            } else {
+                if (past->right!=nullptr) {
+                    past=past->right;
+                } else {
+                    if (past->down!=nullptr) {
+                        past=past->down;
+                        printf("[ ");
+                    } else {
+                        esc=true;
+                        printf("\n");
+                    }
+                }
+            }
+        }
+    }
+
 };
 
