@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 #include <cstdlib>
+#include <map>
 
 #include "munum.h"
 
@@ -28,10 +29,68 @@ class Muscheme {
             right=nullptr;
             down=nullptr;
         }
+        astnode(astnode& a) {
+            type=a.type;
+            size=a.size;
+            val=malloc(size);
+            memcpy(val,a.val,size);
+            right=a.right;
+            down=a.down;
+        }
+        astnode(string str) {
+            type=atom::str;
+            size=str.length()+1;
+            val=malloc(size);
+            strcpy((char *)val, str.c_str());
+            std::cout << "create-str: " << str << std::endl;
+            printf("ch: %s\n",(char *)val);
+            right=nullptr;
+            down=nullptr;
+        }
+        astnode(int i) {
+            type=atom::inum;
+            size=sizeof(int);
+            val=malloc(size);
+            *(int *)val=i;
+            right=nullptr;
+            down=nullptr;
+        }
+        astnode(double f) {
+            type=atom::fnum;
+            size=sizeof(double);
+            val=malloc(size);
+            *(double *)val=f;
+            printf("create %f\n",*(double*)val);
+            right=nullptr;
+            down=nullptr;
+        }
+        string to_str() {
+            switch (type) {
+                case atom::list:
+                case atom::lista:
+                    return "[";
+                case atom::liste:
+                    return "]";
+                case atom::str:
+                    return "\""+string((char *)val)+"\"";
+                case atom::cmt:
+                    return ";"+string((char *)val);
+                case atom::symbol:
+                    return string((char *)val);
+                case atom::inum:
+                    return std::to_string((*(int *)val));
+                case atom::fnum:
+                    return std::to_string((*(double *)val));
+                default:
+                    return "???";
+            }
+        }
         ~astnode() {
             if (val != nullptr) free(val);
         }
     };
+
+    std::map<string,astnode> symstore;
 
     enum aststate {start, inter, token, end};
 
@@ -332,7 +391,7 @@ class Muscheme {
             if (!val) {
                 printf("Something isn't implemented yet, Can't run this.\n");
             } else {
-                eval(ast);
+                evalchecker(ast);
             }
         }
         
@@ -344,21 +403,7 @@ class Muscheme {
             printf("(nul) ");
             return;
         }
-        printf("%s ",atomnames[past->type].c_str());
-        switch (past->type) {
-            case atom::symbol:
-                printf("%s ",(char *)past->val);
-                break;
-            case atom::list:
-                printf("[ ");
-                break;
-            case atom::inum:
-                printf("%d ",*(int *)past->val);
-                break;
-            default:
-                printf(". ");
-                break;
-        }
+        printf("%s %s ",atomnames[past->type].c_str(),past->to_str().c_str());
     }
 
     void preval(std::vector<astnode *> ast) {
@@ -369,7 +414,7 @@ class Muscheme {
         }
     }
 
-    void eval(std::vector<astnode *> ast) {
+    void evalchecker(std::vector<astnode *> ast) {
         astnode * past;
         std::vector<astnode *> stack;
         past=ast[0];
@@ -416,5 +461,59 @@ class Muscheme {
         }
     }
 
+    unsigned int astlen(astnode *past) {
+        if (past==nullptr) return 0;
+        unsigned int l=1;
+        while (past->right != nullptr) {
+            past=past->right;
+            ++l;
+        }
+        return l;
+    }
+
+    astnode *astind(astnode *past, unsigned int ind) {
+        unsigned int l=0;
+        while (true) {
+            if (ind==l) return past;
+            if (past==nullptr) return nullptr;
+            if (past->right==nullptr) return nullptr;
+            past=past->right;
+            ++l;
+        }
+    }
+    
+    string receval(std::vector<astnode *> ast) {
+        astnode *past;
+        if (ast.size()<1) return "ast too small, no data";
+        past=ast[0];
+        return reval(past);
+    }
+
+    string reval(astnode *past) {
+        if (past==nullptr) return "nullptr";
+        if (past->type==atom::list) return reval(past->down);
+        unsigned int l=astlen(past);
+        if (l<1) return "nil";
+        if (past->type!=atom::symbol) return "NOEXPR!";
+        string cmd((char *)past->val);
+        if (l==1) {
+            if (symstore.count(cmd)) {
+                std::cout << "found: " << cmd << " as " << symstore[cmd].to_str() << std::endl;
+                return symstore[cmd].to_str();
+            } else {
+                return cmd+": undefined.";
+            }
+        }
+        if (cmd=="define") {
+            string n,v;
+            if (l!=2) return "INV-DEFINE-LENGTH";
+            astnode* pn=past->right;
+            astnode* pv=pn->right;
+            if (pn->type==atom::list) n=reval(pn->down);
+            else if (pn->type!=atom::symbol) return "BAD-DEFINE-PAR-1";
+            if (pv->type==atom::list) v=reval(pn->down);
+        }
+        return "incomplete";    
+    }
 };
 
