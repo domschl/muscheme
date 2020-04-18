@@ -261,7 +261,8 @@ class Muscheme {
         std::vector<astnode *> ast;
         std::vector<astnode *> stack;
         std::vector<string> toks=tokenize(cmd);
-        astnode *plast=nullptr;
+        astnode *plastd=nullptr;
+        astnode *plastr=nullptr;
         astnode *pastnode=nullptr;
         int ival;
         bool val=true;
@@ -282,15 +283,16 @@ class Muscheme {
                         pastnode=new astnode();
                         pastnode->type=atom::list;
                         ast.push_back(pastnode);
-                        if (plast!=nullptr) {
-                            plast->down=pastnode;
-                        }
-                        stack.push_back(plast);
-                        plast=pastnode;
+                        if (plastd!=nullptr) plastd->down=pastnode;
+                        if (plastr!=nullptr) plastr->right=pastnode;
+                        stack.push_back(pastnode);
+                        plastd=pastnode;
+                        plastr=nullptr;
                         break;
                     case atom::liste:
                         if (stack.size()>0) {
-                            plast=stack.back();
+                            plastr=stack.back();
+                            plastd=nullptr;
                             stack.pop_back();
                         } else {
                             printf("AST stack corruption!\n");
@@ -304,8 +306,10 @@ class Muscheme {
                         ival=atoi(toks[i].c_str());
                         std::memcpy(pastnode->val,(const void *)&ival,sizeof(pastnode->size));
                         ast.push_back(pastnode);
-                        if (plast!=nullptr) plast->right=pastnode;
-                        plast=pastnode;
+                        if (plastd!=nullptr) plastd->down=pastnode;
+                        if (plastr!=nullptr) plastr->right=pastnode;
+                        plastr=pastnode;
+                        plastd=nullptr;
                         break;
                     case atom::symbol:
                         pastnode=new astnode();
@@ -314,8 +318,10 @@ class Muscheme {
                         pastnode->val=malloc(pastnode->size);
                         strcpy((char *)pastnode->val,toks[i].c_str());
                         ast.push_back(pastnode);
-                        if (plast!=nullptr) plast->right=pastnode;
-                        plast=pastnode;
+                        if (plastd!=nullptr) plastd->down=pastnode;
+                        if (plastr!=nullptr) plastr->right=pastnode;
+                        plastr=pastnode;
+                        plastd=nullptr;
                         break;
                     default:
                         printf("Huch! %s\n",atomnames[tt].c_str());
@@ -333,25 +339,77 @@ class Muscheme {
         return ast;
     }
 
+    void printNode(astnode *past) {
+        if (past==nullptr) {
+            printf("(nul) ");
+            return;
+        }
+        printf("%s ",atomnames[past->type].c_str());
+        switch (past->type) {
+            case atom::symbol:
+                printf("%s ",(char *)past->val);
+                break;
+            case atom::list:
+                printf("[ ");
+                break;
+            case atom::inum:
+                printf("%d ",*(int *)past->val);
+                break;
+            default:
+                printf(". ");
+                break;
+        }
+    }
+
+    void preval(std::vector<astnode *> ast) {
+        for (unsigned int i=0; i<ast.size(); i++) {
+            printf("%lx ",(long)ast[i]);
+            printNode(ast[i]);
+            printf(" r:%lx d:%lx\n", (long)ast[i]->right, (long)ast[i]->down);
+        }
+    }
+
     void eval(std::vector<astnode *> ast) {
         astnode * past;
+        std::vector<astnode *> stack;
         past=ast[0];
         bool esc=false;
+        preval(ast);
         while (!esc) {
-            printf("%s ",atomnames[past->type].c_str());
+            while (past==nullptr) {
+                if (stack.size()>0) {
+                    past=stack.back();
+                    stack.pop_back();
+                    printf("]<B> ");
+                } else {
+                    printf("<ye>\n");
+                    return;
+                }
+            }
+            //printf("%s ",atomnames[past->type].c_str());
+            printNode(past);
+            if (past->type==atom::list && past->down==nullptr) printf("MD! ");
             if (past->down!=nullptr && past->right!=nullptr) {
-                printf("bad state: both right and down are pointers?!\n");
-                esc=true;
+                printf("<rd> ");
+                stack.push_back(past->right);
+                past=past->down;
             } else {
                 if (past->right!=nullptr) {
                     past=past->right;
                 } else {
                     if (past->down!=nullptr) {
                         past=past->down;
-                        printf("[ ");
+                        stack.push_back(nullptr);
+                        printf("<d> ");
                     } else {
-                        esc=true;
-                        printf("\n");
+                        if (stack.size()==0) {
+                            esc=true;
+                            printf("<xe>\n");
+                        } else {
+                            past=stack.back();
+                            stack.pop_back();
+                            printf("]<U> ");
+                        }
                     }
                 }
             }
