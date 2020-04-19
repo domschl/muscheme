@@ -101,7 +101,7 @@ class Muscheme {
         }
     };
 
-    std::map<string,astnode> symstore;
+    std::map<string,std::vector<astnode*>> symstore;
 
     enum aststate {start, inter, token, end};
 
@@ -525,13 +525,38 @@ class Muscheme {
         }
     }
     
-    string receval(std::vector<astnode *> ast) {
+    astnode *receval(std::vector<astnode *> ast) {
         astnode *past;
-        if (ast.size()<1) return "ast too small, no data";
+        if (ast.size()<1) {
+            std::cout << "ast too small, no data" << std::endl;
+            return nullptr;
+        }
         past=ast[0];
-        return reval(past)->to_str();
+        return reval(past);
     }
 
+    std::vector<astnode *>newexpr(astnode *past, std::vector<astnode *>ast) {
+        astnode *p=new astnode(*past);
+        while (true) {
+            ast.push_back(p);
+            if (p->type==atom::list) {
+                std::cout << "deeper" << std::endl;
+                if (p->down==nullptr) std::cout << "DOWN-null!?" << std::endl;
+                ast=newexpr(p->down,ast);        
+            
+                if (p->right==nullptr) break;
+                p=new astnode(*(p->right));
+            } else {
+                p->down=nullptr;
+                p->right=nullptr;
+                break;
+            }
+        }
+        std::cout << "new ast vector of length: " << ast.size() << std::endl;
+        evalchecker(ast);
+        return ast;
+    }
+    
     astnode* reval(astnode *past) {
         astnode *inv=new astnode();
         astnode *res=new astnode();
@@ -548,14 +573,17 @@ class Muscheme {
             return inv;
         }
         if (past->type!=atom::symbol) {
-            std::cout << "first param needs to be symbol" << std::endl;
+            if (past->type==atom::inum || past->type==atom::fnum || past->type==atom::str) return past;
+            std::cout << "first param needs to be symbol: " << atomnames[past->type] << std::endl;
             return inv;
         }
         string cmd((char *)past->val);
         if (l==1) {
             if (symstore.count(cmd)) {
-                std::cout << "found: " << cmd << " as " << symstore[cmd].to_str() << std::endl;
-                return &(symstore[cmd]);
+                astnode *p=receval(symstore[cmd]);
+                //if (p->type==atom::list) p=reval(p);
+                std::cout << "found: " << cmd << std::endl;
+                return p; //symstore[cmd];
             } else {
                 std::cout << "symbol " << past->to_str() << " not defined." << std::endl;
                 return inv;
@@ -566,13 +594,14 @@ class Muscheme {
             if (l!=3) return inv;
             astnode* pn=past->right;
             astnode* pv=pn->right;
-            if (pn->type==atom::list) {
-                pn=reval(pn->down);
-            } else if (pn->type!=atom::symbol) return inv;
-            if (pv->type==atom::list) {
-                pv=reval(pn->down);
-            }
-            symstore[pn->to_str()]=*pv;
+            //if (pn->type==atom::list) {
+            //    pn=reval(pn->down);
+            //} else if (pn->type!=atom::symbol) return inv;
+            //if (pv->type==atom::list) {
+            //    pv=reval(pn->down);
+            //}
+            std::vector<astnode *>ast;
+            symstore[pn->to_str()]=newexpr(pv,ast);
             return pv;
         } else if (cmd=="+" || cmd=="*" || cmd=="-" || cmd=="/") {
             if (l<3) {
@@ -590,6 +619,7 @@ class Muscheme {
                 }
                 if (p->type==atom::list) p=reval(p);
                 if (p->type==atom::symbol) {
+                    if (p->type==atom::list) p=reval(p);
                     std::cout << "sym-eval "<<p->to_str() << " ->";
                     astnode *rp = new astnode(*p);
                     rp->down=nullptr;

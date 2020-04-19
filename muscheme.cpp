@@ -11,13 +11,7 @@ void repl(std::string prompt="μλ> ", std::string prompt2="  > ") {
     Muscheme ms;
     bool fst;
     std::vector<Muscheme::astnode *> ast;
-
-    ms.symstore[string("pi")]=Muscheme::astnode((double)3.141592);
-    ms.symstore[string("e")]=Muscheme::astnode((double)2.1828);
-    ms.symstore[string("dom")]=Muscheme::astnode(string("dominik"));
-    
-    printf("symstore: %ld\n", ms.symstore.size());
-    std::cout << ms.symstore["dom"].to_str() << std::endl;
+    bool multiLine=false;
 
     while (true) {
         cmd="";
@@ -32,14 +26,14 @@ void repl(std::string prompt="μλ> ", std::string prompt2="  > ") {
             getline(std::cin, inp);
             if (inp!="") {
                 cmd += inp+"\n";
-                continue;
+                if (multiLine) continue;
             }
             break;
         }
         printf("Inp: %s\n",cmd.c_str());
         if (cmd=="(quit)") return;
         ast=ms.parse(cmd);
-        string ans=ms.receval(ast);
+        string ans=ms.receval(ast)->to_str();
         printf("-> %s\n",ans.c_str());
         for (auto ap : ast) {
             delete ap;
