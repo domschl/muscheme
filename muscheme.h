@@ -29,13 +29,24 @@ class Muscheme {
             right=nullptr;
             down=nullptr;
         }
-        astnode(astnode& a) {
+        astnode(const astnode& a) {
             type=a.type;
             size=a.size;
             val=malloc(size);
             memcpy(val,a.val,size);
             right=a.right;
             down=a.down;
+        }
+        astnode& operator=(const astnode& a) {
+            if (this !=&a) {
+                type=a.type;
+                size=a.size;
+                val=malloc(size);
+                memcpy(val,a.val,size);
+                right=a.right;
+                down=a.down;
+            }
+            return *this;
         }
         astnode(string str) {
             type=atom::str;
@@ -506,7 +517,7 @@ class Muscheme {
         }
         if (cmd=="define") {
             string n,v;
-            if (l!=2) return "INV-DEFINE-LENGTH";
+            if (l!=3) return "INV-DEFINE-LENGTH";
             astnode* pn=past->right;
             astnode* pv=pn->right;
             if (pn->type==atom::list) n=reval(pn->down);

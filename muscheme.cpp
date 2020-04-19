@@ -12,8 +12,8 @@ void repl(std::string prompt="μλ> ", std::string prompt2="  > ") {
     bool fst;
     std::vector<Muscheme::astnode *> ast;
 
-    ms.symstore[string("pi")]=Muscheme::astnode(3.141592);
-    ms.symstore[string("e")]=Muscheme::astnode(2.1828);
+    ms.symstore[string("pi")]=Muscheme::astnode((double)3.141592);
+    ms.symstore[string("e")]=Muscheme::astnode((double)2.1828);
     ms.symstore[string("dom")]=Muscheme::astnode(string("dominik"));
     
     printf("symstore: %ld\n", ms.symstore.size());
