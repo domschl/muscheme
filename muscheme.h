@@ -320,6 +320,7 @@ class Muscheme {
         if (num.find(tok[0])!=NPOS) {
             if (isint(tok)) return atom::inum;
             if (isfloat(tok)) return atom::fnum;
+            if (tok=="-") return atom::symbol;
             printf("Invalid number token: %s\n",tok.c_str());
             return atom::nul;
         }
@@ -528,37 +529,89 @@ class Muscheme {
         astnode *past;
         if (ast.size()<1) return "ast too small, no data";
         past=ast[0];
-        return reval(past);
+        return reval(past)->to_str();
     }
 
-    string reval(astnode *past) {
-        if (past==nullptr) return "nullptr";
-        if (past->type==atom::list) return reval(past->down);
+    astnode* reval(astnode *past) {
+        astnode *inv=new astnode();
+        astnode *res=new astnode();
+        if (past==nullptr) {
+            std::cout << "cannot eval nullptr" << std::endl;
+            return inv;
+        }
+        if (past->type==atom::list) {
+            return reval(past->down); // XXX!
+        }
         unsigned int l=astlen(past);
-        if (l<1) return "nil";
-        if (past->type!=atom::symbol) return "NOEXPR!";
+        if (l<1) {
+            std::cout << "reval list too short (<1)" << std::endl;
+            return inv;
+        }
+        if (past->type!=atom::symbol) {
+            std::cout << "first param needs to be symbol" << std::endl;
+            return inv;
+        }
         string cmd((char *)past->val);
         if (l==1) {
             if (symstore.count(cmd)) {
                 std::cout << "found: " << cmd << " as " << symstore[cmd].to_str() << std::endl;
-                return symstore[cmd].to_str();
+                return &(symstore[cmd]);
             } else {
-                return cmd+": undefined.";
+                std::cout << "symbol " << past->to_str() << " not defined." << std::endl;
+                return inv;
             }
         }
         if (cmd=="define") {
-            string n,v;
             std::cout << "define: l=" << l << std::endl;
-            if (l!=3) return "INV-DEFINE-LENGTH";
+            if (l!=3) return inv;
             astnode* pn=past->right;
             astnode* pv=pn->right;
-            if (pn->type==atom::list) n=reval(pn->down);
-            else if (pn->type!=atom::symbol) return "BAD-DEFINE-PAR-1";
-            if (pv->type==atom::list) v=reval(pn->down);
+            if (pn->type==atom::list) {
+                pn=reval(pn->down);
+            } else if (pn->type!=atom::symbol) return inv;
+            if (pv->type==atom::list) {
+                pv=reval(pn->down);
+            }
             symstore[pn->to_str()]=*pv;
-            return pn->to_str() + " -> " + pv->to_str();
+            return pv;
+        } else if (cmd=="+" || cmd=="*" || cmd=="-" || cmd=="/") {
+            if (l<3) {
+                std::cout << "not enough + params" << std::endl;
+                return inv;
+            }
+            int si=0;
+            double sf=0.0;
+            string ss="";
+            for (int i=1; i<l; i++) {
+                astnode* p=astind(past,i);
+                if (p==nullptr) {
+                    std::cout << "unexpected nullptr at + params" << std::endl;
+                    return inv;
+                }
+                if (p->type==atom::list) p=reval(p);
+                if (p->type==atom::symbol) {
+                    std::cout << "sym-eval "<<p->to_str() << " ->";
+                    astnode *rp = new astnode(*p);
+                    rp->down=nullptr;
+                    rp->right=nullptr;
+                    p=reval(rp);
+                    std::cout << " " << p->to_str() << std::endl;
+                }
+                if (p->type==atom::inum) {
+                    if (i==1) si=*(int *)p->val;
+                    else {
+                        if (cmd=="+") si+=*(int *)p->val;
+                        else if (cmd=="-") si-=*(int *)p->val;
+                        else if (cmd=="*") si = si * (*(int *)p->val);
+                        else if (cmd=="/") si = si / (*(int *)p->val);
+                    }
+                }
+            }
+            res=new astnode(si);
+            return res;
         }
-        return "incomplete";    
+        std::cout << " something is not implemented: " << past->to_str() << std::endl;
+        return inv;    
     }
 };
 
