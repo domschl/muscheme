@@ -335,6 +335,7 @@ class Muscheme {
         astnode *plastr=nullptr;
         astnode *pastnode=nullptr;
         int ival;
+        double fval;
         bool val=true;
         for (auto const& tok: toks) {
             int t=getTokType(tok);
@@ -381,6 +382,36 @@ class Muscheme {
                         plastr=pastnode;
                         plastd=nullptr;
                         break;
+                    case atom::fnum:
+                        pastnode=new astnode();
+                        pastnode->type=atom::fnum;
+                        pastnode->size=sizeof(double);
+                        pastnode->val=malloc(pastnode->size);
+                        fval=atof(toks[i].c_str());
+                        std::memcpy(pastnode->val,(const void *)&fval,sizeof(pastnode->size));
+                        ast.push_back(pastnode);
+                        if (plastd!=nullptr) plastd->down=pastnode;
+                        if (plastr!=nullptr) plastr->right=pastnode;
+                        plastr=pastnode;
+                        plastd=nullptr;
+                        break;
+                    case atom::str:
+                        pastnode=new astnode();
+                        pastnode->type=atom::str;
+                        pastnode->size=toks[i].length()-1;
+                        if (pastnode->size<0 || toks[i][0]!='"' || toks[i][toks[i].length()-1]!='"') {
+                            std::cout << "invalid string token format!" << std::endl;
+                            delete pastnode;
+                            break;
+                        }
+                        pastnode->val=malloc(pastnode->size);
+                        strcpy((char *)pastnode->val,toks[i].substr(1,toks[i].length()-2).c_str());
+                        ast.push_back(pastnode);
+                        if (plastd!=nullptr) plastd->down=pastnode;
+                        if (plastr!=nullptr) plastr->right=pastnode;
+                        plastr=pastnode;
+                        plastd=nullptr;
+                        break; 
                     case atom::symbol:
                         pastnode=new astnode();
                         pastnode->type=atom::symbol;
@@ -517,12 +548,15 @@ class Muscheme {
         }
         if (cmd=="define") {
             string n,v;
+            std::cout << "define: l=" << l << std::endl;
             if (l!=3) return "INV-DEFINE-LENGTH";
             astnode* pn=past->right;
             astnode* pv=pn->right;
             if (pn->type==atom::list) n=reval(pn->down);
             else if (pn->type!=atom::symbol) return "BAD-DEFINE-PAR-1";
             if (pv->type==atom::list) v=reval(pn->down);
+            symstore[pn->to_str()]=*pv;
+            return pn->to_str() + " -> " + pv->to_str();
         }
         return "incomplete";    
     }
