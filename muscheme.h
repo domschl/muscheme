@@ -546,8 +546,8 @@ class Muscheme {
                 //std::cout << "deeper" << std::endl;
                 //if (p->down==nullptr) std::cout << "DOWN-null!?" << std::endl;
                 std::cout << "cur ast vector of length: " << ast.size() << std::endl;
-                ast=newexpr(psrcast->down,nullptr, p, false, ast);        
-                if (p->right==nullptr) break;
+                ast=newexpr(psrcast->down,nullptr , p, false, ast);        
+                if (psrcast->right==nullptr) break;
                 astnode *pn=new astnode(*(psrcast->right));
                 psrcast=psrcast->right;
                 p->right=pn;
