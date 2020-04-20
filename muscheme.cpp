@@ -11,7 +11,8 @@ void repl(std::string prompt="μλ> ", std::string prompt2="  > ") {
     Muscheme ms;
     bool fst;
     std::vector<Muscheme::astnode *> ast;
-    bool multiLine=false;
+    string ans;
+    Muscheme::parse_state state=Muscheme::parse_state::failure;
 
     while (true) {
         cmd="";
@@ -24,16 +25,36 @@ void repl(std::string prompt="μλ> ", std::string prompt2="  > ") {
                 std::cout << prompt2;
             }
             getline(std::cin, inp);
-            if (inp!="") {
+            if (inp=="") {
+                cmd = "";
+                fst=true;
+                continue;
+            } else {
                 cmd += inp+"\n";
-                if (multiLine) continue;
             }
+            printf("Inp: %s",cmd.c_str());
+            if (cmd=="(quit)\n") {
+                ms.freesyms();
+                return;
+            }
+            ast=ms.parse(cmd,&state);
+            if (state==Muscheme::parse_state::incomplete) continue;
             break;
         }
-        printf("Inp: %s\n",cmd.c_str());
-        if (cmd=="(quit)") return;
-        ast=ms.parse(cmd);
-        string ans=ms.receval(ast)->to_str();
+        if (state==Muscheme::parse_state::failure) {
+            printf("Err\n");
+            continue;
+        }
+        Muscheme::astnode* past=ms.receval(ast);
+        if (past!=nullptr) {
+            ans=past->to_str();
+            if  (past->val!=nullptr) {
+                free(past->val);
+                past->val=nullptr;
+            }
+            delete past;
+        }
+        else ans="ok.";
         printf("-> %s\n",ans.c_str());
         for (auto ap : ast) {
             delete ap;

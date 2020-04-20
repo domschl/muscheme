@@ -155,8 +155,9 @@ class Muscheme {
     }
 
     enum tokstate {nil, sym, vstr, comm};
+    enum parse_state {ok, failure, incomplete};
 
-    std::vector<string> tokenize(string cmd) {
+    std::vector<string> tokenize(string cmd, parse_state *pstate) {
         std::vector<string> toks;
         std::vector<string> empty;
         std::vector<int> qlev;
@@ -187,6 +188,7 @@ class Muscheme {
                         case ')':
                             if (brlev==0) {
                                 printf("Too many ')' after: %s",cmd.substr(0,i).c_str()); 
+                                if (pstate) *pstate=parse_state::failure;
                                 return empty;
                             } else {
                                 brlev-=1;
@@ -235,6 +237,7 @@ class Muscheme {
                 case tokstate::sym:
                     if (reschars.find(c)!=NPOS) {
                         printf("Unexpected character after: %s\n",cmd.substr(0,i).c_str());
+                        if (pstate) *pstate=parse_state::failure;
                         return empty;
                     }
                     if (ws.find(c)!=NPOS) {
@@ -269,17 +272,20 @@ class Muscheme {
                     continue;
                 default:
                     printf("Internal tokenizer error at: %s",cmd.substr(0,i).c_str());
+                    if (pstate) *pstate=parse_state::failure;
                     return empty;
             }
         }
         if (brlev>0) {
             if (state!=tokstate::vstr)printf("Missing closing parentesis after: %s\n", cmd.c_str());
             else printf("Missing string-closing \" (and maybe: closing parentesis missing) after: %s\n", cmd.c_str());
+            if (pstate) *pstate=parse_state::incomplete;
             return empty;
         }
         switch (state) {
             case tokstate::vstr:
                 printf("String expression not closed after: %s\n", cmd.c_str());
+                if (pstate) *pstate=parse_state::incomplete;
                 return empty;
             case tokstate::comm:
             case tokstate::sym:
@@ -289,6 +295,7 @@ class Muscheme {
                 break;
             default:
                 printf("Invalid end-state %d\n",state);
+                if (pstate) *pstate=parse_state::failure;
                 return empty;
         }
         if (qlev.size()>0) {
@@ -296,6 +303,7 @@ class Muscheme {
                 toks.push_back(")");
             }
         }
+        if (pstate) *pstate=parse_state::ok;
         return toks;
     }
 
@@ -328,16 +336,23 @@ class Muscheme {
         return atom::symbol;
     }
 
-    std::vector<astnode *> parse(string cmd) {
+
+    std::vector<astnode *> parse(string cmd, parse_state* pstate) {
         std::vector<astnode *> ast;
         std::vector<astnode *> stack;
-        std::vector<string> toks=tokenize(cmd);
+        parse_state tokstate;
+        std::vector<string> toks=tokenize(cmd, &tokstate);
         astnode *plastd=nullptr;
         astnode *plastr=nullptr;
         astnode *pastnode=nullptr;
         int ival;
         double fval;
         bool val=true;
+
+        if (tokstate!=parse_state::ok) {
+            if (pstate) *pstate=tokstate;
+            return ast;
+        }
         for (auto const& tok: toks) {
             int t=getTokType(tok);
             if (t==atom::nul) val=false;
@@ -345,6 +360,7 @@ class Muscheme {
         }
         printf("\n");
         if (!val) {
+            if (pstate) *pstate=parse_state::failure;
             printf("INVALID\n");
             return ast;
         } else {
@@ -437,7 +453,7 @@ class Muscheme {
                 evalchecker(ast);
             }
         }
-        
+        if (pstate) *pstate=parse_state::ok;
         return ast;
     }
 
@@ -532,11 +548,13 @@ class Muscheme {
             return nullptr;
         }
         past=ast[0];
-        return reval(past);
+        astnode *p=reval(past);
+        //if (p!=nullptr) p=new astnode(*p);
+        return p;
     }
 
-    std::vector<astnode *>newexpr(astnode *psrcast, astnode *plrast,astnode *pldast, bool isBase, std::vector<astnode *>&_ast) {
-        std::vector<astnode *> ast(_ast);
+    std::vector<astnode *>newexpr(astnode *psrcast, astnode *plrast,astnode *pldast, bool isBase, std::vector<astnode *>&ast) {
+        //std::vector<astnode *> ast(_ast);
         astnode *p=new astnode(*psrcast);
         if (pldast!=nullptr) pldast->down=p;
         if (plrast!=nullptr) plrast->right=p;
@@ -577,40 +595,46 @@ class Muscheme {
     }
     
     astnode* reval(astnode *past) {
-        astnode *inv=new astnode();
-        astnode *res=new astnode();
+        astnode *inv,*res;
         if (past==nullptr) {
             std::cout << "cannot eval nullptr" << std::endl;
+             inv=new astnode();
             return inv;
         }
         if (past->type==atom::list) {
-            return reval(past->down); // XXX!
+            return reval(past->down);
         }
         unsigned int l=astlen(past);
         if (l<1) {
             std::cout << "reval list too short (<1)" << std::endl;
+            inv=new astnode();
             return inv;
         }
         if (past->type!=atom::symbol) {
             if (past->type==atom::inum || past->type==atom::fnum || past->type==atom::str) return past;
             std::cout << "first param needs to be symbol: " << atomnames[past->type] << std::endl;
+            inv=new astnode();
             return inv;
         }
         string cmd((char *)past->val);
         if (l==1) {
             if (symstore.count(cmd)) {
                 astnode *p=receval(symstore[cmd]);
-                //if (p->type==atom::list) p=reval(p);
                 std::cout << "found: " << cmd << std::endl;
-                return p; //symstore[cmd];
+                p=new astnode(*p);
+                return p;
             } else {
                 std::cout << "symbol " << past->to_str() << " not defined." << std::endl;
+                inv=new astnode();
                 return inv;
             }
         }
         if (cmd=="define") {
             std::cout << "define: l=" << l << std::endl;
-            if (l!=3) return inv;
+            if (l!=3) {
+                inv=new astnode();
+                return inv;
+            }
             astnode* pn=past->right;
             astnode* pv=pn->right;
             //if (pn->type==atom::list) {
@@ -621,29 +645,37 @@ class Muscheme {
             //}
             std::vector<astnode *>ast;
             symstore[pn->to_str()]=newexpr(pv,nullptr, nullptr, true, ast);
-            return pv;
+            return nullptr;
         } else if (cmd=="+" || cmd=="*" || cmd=="-" || cmd=="/") {
             if (l<3) {
                 std::cout << "not enough + params" << std::endl;
+                inv=new astnode();
                 return inv;
             }
             int si=0;
             double sf=0.0;
             string ss="";
+            bool bF=false;
             for (int i=1; i<l; i++) {
                 astnode* p=astind(past,i);
                 if (p==nullptr) {
                     std::cout << "unexpected nullptr at + params" << std::endl;
+                    inv=new astnode();
                     return inv;
                 }
-                if (p->type==atom::list) p=reval(p);
+                if (p->type==atom::list) {
+                    p=reval(p);
+                    bF=true;
+                }
                 if (p->type==atom::symbol) {
-                    if (p->type==atom::list) p=reval(p);
+                    //if (p->type==atom::list) p=reval(p);
                     std::cout << "sym-eval "<<p->to_str() << " ->";
                     astnode *rp = new astnode(*p);
                     rp->down=nullptr;
                     rp->right=nullptr;
                     p=reval(rp);
+                    bF=true;
+                    delete rp;
                     std::cout << " " << p->to_str() << std::endl;
                 }
                 if (p->type==atom::inum) {
@@ -655,12 +687,28 @@ class Muscheme {
                         else if (cmd=="/") si = si / (*(int *)p->val);
                     }
                 }
+                if (bF) delete p;
             }
             res=new astnode(si);
             return res;
         }
         std::cout << " something is not implemented: " << past->to_str() << std::endl;
+        inv=new astnode();
         return inv;    
     }
+
+    void freesyms() {
+        for (auto a : symstore) {
+            for (auto b : a.second) {
+                astnode *p=b;
+                if (p->val!=nullptr) {
+                    free(p->val);
+                    p->val=nullptr;
+                }
+                delete b;
+            }
+        }
+    }
+
 };
 
