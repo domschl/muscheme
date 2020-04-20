@@ -535,21 +535,40 @@ class Muscheme {
         return reval(past);
     }
 
-    std::vector<astnode *>newexpr(astnode *past, std::vector<astnode *>ast) {
-        astnode *p=new astnode(*past);
+    std::vector<astnode *>newexpr(astnode *psrcast, astnode *plrast,astnode *pldast, bool isBase, std::vector<astnode *>&_ast) {
+        std::vector<astnode *> ast(_ast);
+        astnode *p=new astnode(*psrcast);
+        if (pldast!=nullptr) pldast->down=p;
+        if (plrast!=nullptr) plrast->right=p;
         while (true) {
             ast.push_back(p);
             if (p->type==atom::list) {
-                std::cout << "deeper" << std::endl;
-                if (p->down==nullptr) std::cout << "DOWN-null!?" << std::endl;
-                ast=newexpr(p->down,ast);        
-            
+                //std::cout << "deeper" << std::endl;
+                //if (p->down==nullptr) std::cout << "DOWN-null!?" << std::endl;
+                std::cout << "cur ast vector of length: " << ast.size() << std::endl;
+                ast=newexpr(psrcast->down,nullptr, p, false, ast);        
                 if (p->right==nullptr) break;
-                p=new astnode(*(p->right));
+                astnode *pn=new astnode(*(psrcast->right));
+                psrcast=psrcast->right;
+                p->right=pn;
+                pn->down=nullptr;
+                pn->right=nullptr;
+                p=pn;
             } else {
-                p->down=nullptr;
-                p->right=nullptr;
-                break;
+                if (isBase) {
+                    p->down=nullptr;
+                    p->right=nullptr;
+                    break;
+                } else {
+                    if (psrcast->right==nullptr) break;
+                    astnode *pn=new astnode(*(psrcast->right));
+                    psrcast=psrcast->right;
+                    p->right=pn;
+                    pn->right=nullptr;
+                    pn->down=nullptr;
+                    p=pn;
+                    continue;
+                }
             }
         }
         std::cout << "new ast vector of length: " << ast.size() << std::endl;
@@ -601,7 +620,7 @@ class Muscheme {
             //    pv=reval(pn->down);
             //}
             std::vector<astnode *>ast;
-            symstore[pn->to_str()]=newexpr(pv,ast);
+            symstore[pn->to_str()]=newexpr(pv,nullptr, nullptr, true, ast);
             return pv;
         } else if (cmd=="+" || cmd=="*" || cmd=="-" || cmd=="/") {
             if (l<3) {
