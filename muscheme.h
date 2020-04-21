@@ -597,6 +597,7 @@ class Muscheme {
     astnode* reduce(astnode *p, bool* alloced) {
         *alloced=false;
         astnode *inv;
+        astnode *pn;
         if (p==nullptr) {
             std::cout << "unexpected nullptr at + params" << std::endl;
             inv=new astnode();
@@ -604,23 +605,25 @@ class Muscheme {
             return inv;
         }
         if (p->type==atom::list) {
-            p=reval(p);
+            pn=reval(p,false);
             //*alloced=true;
+            return pn;
         }
         if (p->type==atom::symbol) {
             std::cout << "sym-eval "<<p->to_str() << " ->";
             astnode *rp = new astnode(*p);
             rp->down=nullptr;
             rp->right=nullptr;
-            p=reval(rp);
+            pn=reval(rp);
             *alloced=true;
             delete rp;
             std::cout << " " << p->to_str() << std::endl;
+            return pn;
         }
         return p;
     }
     
-    astnode* reval(astnode *past) {
+    astnode* reval(astnode *past, bool multi=true) {
         astnode *inv,*res;
         if (past==nullptr) {
             std::cout << "cannot eval nullptr" << std::endl;
@@ -628,13 +631,17 @@ class Muscheme {
             return inv;
         }
         if (past->type==atom::list) {
-            if (past->right==nullptr) {
+            if (past->right==nullptr || !multi) {
                 return reval(past->down);
             } else {
                 astnode* p=reval(past->down);
-                if (p->val!=nullptr) free(p->val);
-                p->val=nullptr;
-                delete p;
+                if (p!=nullptr) {
+                    if (p->val!=nullptr) {
+                        free(p->val);
+                        p->val=nullptr;
+                    }
+                    delete p;
+                }
                 return reval(past->right);
             }
         }
@@ -728,16 +735,20 @@ class Muscheme {
             bool bF=false;
             for (unsigned int i=1; i<l; i++) {
                 astnode* p=astind(past,i);
+                std::cout << "prered: "; printNode(p);
                 p=reduce(p,&bF);
+                std::cout << ", postred: "; printNode(p); std::cout << std::endl;
                 if (p->type==atom::inum) {
                     if (i==1) si=*(int *)p->val;
                     else {
+                        std::cout << "cond " << si << cmd << *(int *)p->val;
                         if (cmd=="==") si=(si==*(int *)p->val);
                         else if (cmd=="!=") si=(si!=*(int *)p->val);
                         else if (cmd==">=") si=(si>=*(int *)p->val);
                         else if (cmd=="<=") si=(si<=*(int *)p->val);
                         else if (cmd==">") si=(si>*(int *)p->val);
                         else if (cmd=="<") si=(si<*(int *)p->val);
+                        std::cout << " => " << si << std::endl;
                     }
                 }
                 if (bF) delete p;
@@ -751,7 +762,26 @@ class Muscheme {
                 return inv;
             }
             bool bF=false;
-            astnode* cond=reduce(astind(past,1),&bF);
+            astnode *p1=astind(past,1);
+            astnode *p2=astind(past,2);
+            astnode *p3=nullptr;
+            if (l==4) p3=astind(past,3);
+            astnode* cond=reduce(p1,&bF);
+            if (cond==nullptr || cond->type!=atom::inum) {
+                astnode* inv=new astnode();
+                return inv;
+            }
+            astnode *res=nullptr;
+            int ifc=*(int *)cond->val;
+            std::cout << "cond: " << ifc << std::endl;
+            if (*(int *)cond->val!=0) {
+                std::cout << "true" << std::endl;
+                res=reval(p2);
+            } else if (l==4) {
+                std::cout << "false" << std::endl;
+                res=reval(p3);
+            }
+            return res;
         }
            
         std::cout << " something is not implemented: " << past->to_str() << std::endl;
