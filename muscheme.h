@@ -602,7 +602,12 @@ class Muscheme {
             return inv;
         }
         if (past->type==atom::list) {
-            return reval(past->down);
+            if (past->right==nullptr) {
+                return reval(past->down);
+            } else {
+                reval(past->down);
+                return reval(past->right);
+            }
         }
         unsigned int l=astlen(past);
         if (l<1) {
@@ -644,6 +649,10 @@ class Muscheme {
             //    pv=reval(pn->down);
             //}
             std::vector<astnode *>ast;
+            if (symstore.count(pn->to_str())) {
+                // XXX This would be the place to prevent mutability.
+                freesym(pn->to_str());
+            }
             symstore[pn->to_str()]=newexpr(pv,nullptr, nullptr, true, ast);
             return nullptr;
         } else if (cmd=="+" || cmd=="*" || cmd=="-" || cmd=="/") {
@@ -697,16 +706,22 @@ class Muscheme {
         return inv;    
     }
 
+    void freesym(string sym) {
+        if (!symstore.count(sym)) return;
+        for (auto b : symstore[sym]) {
+            astnode *p=b;
+            if (p->val!=nullptr) {
+                free(p->val);
+                p->val=nullptr;
+            }
+            delete b;
+        }
+    }
+
     void freesyms() {
         for (auto a : symstore) {
-            for (auto b : a.second) {
-                astnode *p=b;
-                if (p->val!=nullptr) {
-                    free(p->val);
-                    p->val=nullptr;
-                }
-                delete b;
-            }
+            freesym(a.first);
+
         }
     }
 
