@@ -673,17 +673,12 @@ class Muscheme {
         if (cmd=="define") {
             std::cout << "define: l=" << l << std::endl;
             if (l!=3) {
+                std::cout << "define needs 2 params" << std::endl;
                 inv=new astnode();
                 return inv;
             }
             astnode* pn=past->right;
             astnode* pv=pn->right;
-            //if (pn->type==atom::list) {
-            //    pn=reval(pn->down);
-            //} else if (pn->type!=atom::symbol) return inv;
-            //if (pv->type==atom::list) {
-            //    pv=reval(pn->down);
-            //}
             std::vector<astnode *>ast;
             if (symstore.count(pn->to_str())) {
                 // XXX This would be the place to prevent mutability.
@@ -691,7 +686,23 @@ class Muscheme {
             }
             symstore[pn->to_str()]=newexpr(pv,nullptr, nullptr, true, ast);
             return nullptr;
-        } else if (cmd=="+" || cmd=="*" || cmd=="-" || cmd=="/" || cmd=="mod") {
+        } else if (cmd=="set") {
+            if (l!=3) {
+                std::cout << "set needs 2 params" << std::endl;
+                inv=new astnode();
+                return inv;
+            }
+            astnode* pn=past->right;
+            astnode* pv=pn->right;
+            std::vector<astnode *>ast;
+            if (symstore.count(pn->to_str())) {
+                // XXX This would be the place to prevent mutability.
+                freesym(pn->to_str());
+            }
+            astnode* res=reval(pv, false);
+            symstore[pn->to_str()]=newexpr(res, nullptr, nullptr, true, ast);
+            return nullptr;
+         } else if (cmd=="+" || cmd=="*" || cmd=="-" || cmd=="/" || cmd=="mod") {
             if (l<3) {
                 std::cout << "not enough + params" << std::endl;
                 inv=new astnode();
@@ -725,7 +736,7 @@ class Muscheme {
             return res;
         } else if (cmd=="==" || cmd=="!=" || cmd==">" || cmd==">=" || cmd=="<" || cmd=="<=") {
             if (l!=3) {
-                std::cout << "compare needs 3 params" << std::endl;
+                std::cout << "compare needs 2 params" << std::endl;
                 inv=new astnode();
                 return inv;
             }
@@ -757,7 +768,7 @@ class Muscheme {
             return res;
         } else if (cmd=="if") {
             if (l!=3 && l!=4) {
-                std::cout << " if needs 3 or 4 params" << std::endl;
+                std::cout << " if needs 2 or 3 params" << std::endl;
                 inv=new astnode();
                 return inv;
             }
@@ -782,6 +793,20 @@ class Muscheme {
                 res=reval(p3);
             }
             return res;
+        } else if (cmd=="eval") {
+            if (l!=2) {
+                std::cout << " eval needs 1 param" << std::endl;
+                inv=new astnode();
+                return inv;
+            }
+            bool bF=false;
+            astnode *p1=astind(past,1);
+            astnode *res0=reduce(p1,&bF);
+            astnode *res=new astnode(*res0);
+            if (bF) delete res0;
+            res->right=nullptr;
+            res->down=nullptr;
+            return res;
         }
            
         std::cout << " something is not implemented: " << past->to_str() << std::endl;
@@ -790,7 +815,6 @@ class Muscheme {
     }
 
     void freesym(string sym, bool delentry=true) {
-        std::cout << "start freesym: " << sym << std::endl;
         if (!symstore.count(sym)) return;
         for (auto b : symstore[sym]) {
             //astnode *p=b;
@@ -801,7 +825,6 @@ class Muscheme {
             delete b;
         }
         if (delentry) symstore.erase(symstore.find(sym));
-        std::cout << "end freesym " << sym << std::endl;
     }
 
     void freesyms() {
