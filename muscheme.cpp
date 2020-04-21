@@ -35,6 +35,7 @@ void repl(std::string prompt="μλ> ", std::string prompt2="  > ") {
             printf("Inp: %s",cmd.c_str());
             if (cmd=="(quit)\n") {
                 ms.freesyms();
+                std::cout << "done freesyms" << std::endl;
                 return;
             }
             ast=ms.parse(cmd,&state);
@@ -61,14 +62,13 @@ void repl(std::string prompt="μλ> ", std::string prompt2="  > ") {
                 if (ap->val!=nullptr) free(ap->val);
                 ap->val=nullptr;
                 delete ap;
-                std::cout << "DEL-";
             }
         }
-        std::cout << std::endl;
     }
 }
 
 int main(int argc, char *argv[]) {
     repl();
+    std::cout << "end-repl" << std::endl;
     return 0;
 }

@@ -789,7 +789,7 @@ class Muscheme {
         return inv;    
     }
 
-    void freesym(string sym) {
+    void freesym(string sym, bool delentry=true) {
         std::cout << "start freesym: " << sym << std::endl;
         if (!symstore.count(sym)) return;
         for (auto b : symstore[sym]) {
@@ -800,13 +800,14 @@ class Muscheme {
             }
             delete b;
         }
-        symstore.erase(sym);
+        if (delentry) symstore.erase(symstore.find(sym));
         std::cout << "end freesym " << sym << std::endl;
     }
 
     void freesyms() {
+        std::cout << "Freeing " << symstore.size() << " entries" << std::endl;
         for (auto a : symstore) {
-            freesym(a.first);
+            freesym(a.first,false);
         }
     }
 
