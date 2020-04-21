@@ -57,8 +57,11 @@ void repl(std::string prompt="μλ> ", std::string prompt2="  > ") {
         else ans="ok.";
         printf("-> %s\n",ans.c_str());
         for (auto ap : ast) {
-            delete ap;
+            if (past!=ap) delete ap;
+            std::cout << "DEL-";
+            //delete ap;
         }
+        std::cout << std::endl;
     }
 }
 

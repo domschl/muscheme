@@ -392,7 +392,7 @@ class Muscheme {
                         pastnode->size=sizeof(int);
                         pastnode->val=malloc(pastnode->size);
                         ival=atoi(toks[i].c_str());
-                        std::memcpy(pastnode->val,(const void *)&ival,sizeof(pastnode->size));
+                        std::memcpy(pastnode->val,(const void *)&ival,pastnode->size);
                         ast.push_back(pastnode);
                         if (plastd!=nullptr) plastd->down=pastnode;
                         if (plastr!=nullptr) plastr->right=pastnode;
@@ -405,7 +405,7 @@ class Muscheme {
                         pastnode->size=sizeof(double);
                         pastnode->val=malloc(pastnode->size);
                         fval=atof(toks[i].c_str());
-                        std::memcpy(pastnode->val,(const void *)&fval,sizeof(pastnode->size));
+                        std::memcpy(pastnode->val,(const void *)&fval,pastnode->size);
                         ast.push_back(pastnode);
                         if (plastd!=nullptr) plastd->down=pastnode;
                         if (plastr!=nullptr) plastr->right=pastnode;
@@ -594,6 +594,32 @@ class Muscheme {
         return ast;
     }
     
+    astnode* reduce(astnode *p, bool* alloced) {
+        *alloced=false;
+        astnode *inv;
+        if (p==nullptr) {
+            std::cout << "unexpected nullptr at + params" << std::endl;
+            inv=new astnode();
+            *alloced=true;
+            return inv;
+        }
+        if (p->type==atom::list) {
+            p=reval(p);
+            //*alloced=true;
+        }
+        if (p->type==atom::symbol) {
+            std::cout << "sym-eval "<<p->to_str() << " ->";
+            astnode *rp = new astnode(*p);
+            rp->down=nullptr;
+            rp->right=nullptr;
+            p=reval(rp);
+            *alloced=true;
+            delete rp;
+            std::cout << " " << p->to_str() << std::endl;
+        }
+        return p;
+    }
+    
     astnode* reval(astnode *past) {
         astnode *inv,*res;
         if (past==nullptr) {
@@ -605,7 +631,10 @@ class Muscheme {
             if (past->right==nullptr) {
                 return reval(past->down);
             } else {
-                reval(past->down);
+                astnode* p=reval(past->down);
+                if (p->val!=nullptr) free(p->val);
+                p->val=nullptr;
+                delete p;
                 return reval(past->right);
             }
         }
@@ -655,38 +684,24 @@ class Muscheme {
             }
             symstore[pn->to_str()]=newexpr(pv,nullptr, nullptr, true, ast);
             return nullptr;
-        } else if (cmd=="+" || cmd=="*" || cmd=="-" || cmd=="/") {
+        } else if (cmd=="+" || cmd=="*" || cmd=="-" || cmd=="/" || cmd=="mod") {
             if (l<3) {
                 std::cout << "not enough + params" << std::endl;
                 inv=new astnode();
                 return inv;
             }
             int si=0;
-            double sf=0.0;
-            string ss="";
+            //double sf=0.0;
+            //string ss="";
             bool bF=false;
-            for (int i=1; i<l; i++) {
+            for (unsigned int i=1; i<l; i++) {
                 astnode* p=astind(past,i);
                 if (p==nullptr) {
                     std::cout << "unexpected nullptr at + params" << std::endl;
                     inv=new astnode();
                     return inv;
                 }
-                if (p->type==atom::list) {
-                    p=reval(p);
-                    bF=true;
-                }
-                if (p->type==atom::symbol) {
-                    //if (p->type==atom::list) p=reval(p);
-                    std::cout << "sym-eval "<<p->to_str() << " ->";
-                    astnode *rp = new astnode(*p);
-                    rp->down=nullptr;
-                    rp->right=nullptr;
-                    p=reval(rp);
-                    bF=true;
-                    delete rp;
-                    std::cout << " " << p->to_str() << std::endl;
-                }
+                p=reduce(p,&bF);
                 if (p->type==atom::inum) {
                     if (i==1) si=*(int *)p->val;
                     else {
@@ -694,34 +709,74 @@ class Muscheme {
                         else if (cmd=="-") si-=*(int *)p->val;
                         else if (cmd=="*") si = si * (*(int *)p->val);
                         else if (cmd=="/") si = si / (*(int *)p->val);
+                        else if (cmd=="mod") si = si % (*(int *)p->val);
                     }
                 }
                 if (bF) delete p;
             }
             res=new astnode(si);
             return res;
+        } else if (cmd=="==" || cmd=="!=" || cmd==">" || cmd==">=" || cmd=="<" || cmd=="<=") {
+            if (l!=3) {
+                std::cout << "compare needs 3 params" << std::endl;
+                inv=new astnode();
+                return inv;
+            }
+            int si=0;
+            //double sf=0.0;
+            //string ss="";
+            bool bF=false;
+            for (unsigned int i=1; i<l; i++) {
+                astnode* p=astind(past,i);
+                p=reduce(p,&bF);
+                if (p->type==atom::inum) {
+                    if (i==1) si=*(int *)p->val;
+                    else {
+                        if (cmd=="==") si=(si==*(int *)p->val);
+                        else if (cmd=="!=") si=(si!=*(int *)p->val);
+                        else if (cmd==">=") si=(si>=*(int *)p->val);
+                        else if (cmd=="<=") si=(si<=*(int *)p->val);
+                        else if (cmd==">") si=(si>*(int *)p->val);
+                        else if (cmd=="<") si=(si<*(int *)p->val);
+                    }
+                }
+                if (bF) delete p;
+            }
+            res=new astnode(si);
+            return res;
+        } else if (cmd=="if") {
+            if (l!=3 && l!=4) {
+                std::cout << " if needs 3 or 4 params" << std::endl;
+                inv=new astnode();
+                return inv;
+            }
+            bool bF=false;
+            astnode* cond=reduce(astind(past,1),&bF);
         }
+           
         std::cout << " something is not implemented: " << past->to_str() << std::endl;
         inv=new astnode();
         return inv;    
     }
 
     void freesym(string sym) {
+        std::cout << "start freesym: " << sym << std::endl;
         if (!symstore.count(sym)) return;
         for (auto b : symstore[sym]) {
-            astnode *p=b;
-            if (p->val!=nullptr) {
-                free(p->val);
-                p->val=nullptr;
+            //astnode *p=b;
+            if (b->val!=nullptr) {
+                free(b->val);
+                b->val=nullptr;
             }
             delete b;
         }
+        symstore.erase(sym);
+        std::cout << "end freesym " << sym << std::endl;
     }
 
     void freesyms() {
         for (auto a : symstore) {
             freesym(a.first);
-
         }
     }
 
