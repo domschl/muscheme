@@ -303,7 +303,7 @@ int testmuipdiv(Muscheme &ms, int count = 1000, bool verbose = false,
                        resp[1].str().c_str());
         }
 
-        q = a.mudiv(a, b);
+        q = a.mudivnat(a, b);
         r = a.mumod(a, b);
         if (q.str() != res[0].str()) {
             printf("Error %d div %d = %d, not %s,%s\n", i1, i2, dv,

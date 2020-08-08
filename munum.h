@@ -420,6 +420,7 @@ struct munum {
         n2 = munum(num2.den);
         res.den = mumulnat(n1, n2).nom;
         res.pos = (num1.pos == num2.pos);
+        res = mufactor(res);
         return res;
     }
 
@@ -538,10 +539,14 @@ struct munum {
 
     static munum mufactor(munum num1) {
         printf("factor: %s\n", num1.str().c_str());
+        if (num1.den=="0") {
+            num1.to_nan();
+            return num1;
+        }
         munum n1(num1.nom), n2(num1.den);
         munum gcd = mugcd(n1, n2);
-        n1 = mudiv(n1, gcd);
-        n2 = mudiv(n2, gcd);
+        n1 = mudivnat(n1, gcd);
+        n2 = mudivnat(n2, gcd);
         num1.nom = n1.nom;
         num1.den = n2.nom;
         return num1;
@@ -612,7 +617,7 @@ struct munum {
         return res;
     }
 
-    static munum mudiv(munum num1, munum num2) {
+    static munum mudivnat(munum num1, munum num2) {
         munum q(0), r(0);
         std::vector<munum> res;
         if (num1.type != munum::mum_valid || num2.type != munum::mum_valid) {
@@ -624,6 +629,13 @@ struct munum {
         }
         res = mudivmod(num1, num2);
         return res[0];
+    }
+
+    static munum mudiv(munum num1, munum num2) {
+        munum inv=num2;
+        inv.nom=num2.den;
+        inv.den=num2.nom;
+        return mumul(num1,inv);
     }
 
     static munum mumod(munum num1, munum num2) {
