@@ -260,7 +260,7 @@ struct munum {
     static munum muadd(munum num1, munum num2) {
         bool fact = false;
         munum res;
-        if (num1.den != num2.den) {
+        if (num1.den != "1" || num2.den!= "1") {
             printf("(+0) %s %s\n", num1.str().c_str(), num2.str().c_str());
             munum d1;
             d1 = num1;
