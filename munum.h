@@ -294,22 +294,47 @@ struct munum {
     }
 
     static munum musub(munum num1, munum num2) {
+        bool fact = false;
+        munum res;
+        if (num1.den != "1" || num2.den!= "1") {
+            printf("(+0) %s %s\n", num1.str().c_str(), num2.str().c_str());
+            munum d1;
+            d1 = num1;
+            printf("(d1) %s\n", d1.str().c_str());
+            num1 = mumul(num1, munum(num2.den + '/' + num2.den));
+            printf("(+1pre) %s %s\n", num1.str().c_str(), d1.str().c_str());
+            num2 = mumul(num2, munum(d1.den + '/' + d1.den));
+            printf("(+1) %s %s\n", num1.str().c_str(), num2.str().c_str());
+            fact = true;
+        }
         if (num1.pos && !num2.pos) {
             num2.pos = true;
-            return muipadd(num1, num2);
+            res = muipadd(num1, num2);
+            if (fact)
+                res = mufactor(res);
+            return res;
         }
         if (num1.pos && num2.pos) {
-            return muipsub(num1, num2);
+            res = muipsub(num1, num2);
+            if (fact)
+                res = mufactor(res);
+            return res;
         }
         if (!num1.pos && num2.pos) {
             num2.pos = false;
-            return muipadd(num1, num2);
+            res = muipadd(num1, num2);
+            if (fact)
+                res = mufactor(res);
+            return res;
         }
         // if (!num1.pos && !num2.pos)
         munum r;
         num1.pos = true;
         num2.pos = true;
-        return muipsub(num2, num1);
+        res= muipsub(num2, num1);
+        if (fact)
+            res = mufactor(res);
+        return res;
     }
 
     static munum mumulnat(munum num1, munum num2) {
