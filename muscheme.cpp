@@ -106,7 +106,8 @@ string termDetect(string &prompt, string &prompt2) {
     string term(ct);
     if (term == "vt420") {
         std::cout << "VT420" << std::endl;
-        prompt = "uL> ";
+        char lambda = 134;
+        prompt = lambda + "L> ";
         prompt2 = "  > ";
     } else {
         // std::cout << "no special terminal" << std::endl;
