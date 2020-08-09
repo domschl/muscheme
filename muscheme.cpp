@@ -100,8 +100,9 @@ void quitInterpreter(Muscheme &ms) {
     std::cout << "done freesyms" << std::endl;
 }
 
-void termDetect(string &prompt, string &prompt2) {
-    if (!strcmp(std::getenv("TERM"), "vt420")) {
+string termDetect(string &prompt, string &prompt2) {
+    string term(std::getenv("TERM"));
+    if (!strcmp(term.c_str(), "vt420")) {
         std::cout << "VT420" << std::endl;
         prompt = "uL> ";
         prompt2 = "  > ";
@@ -110,6 +111,7 @@ void termDetect(string &prompt, string &prompt2) {
         prompt = "μλ> ";
         prompt2 = "  > ";
     }
+    return term;
 }
 
 void repl(std::string &prompt, std::string &prompt2) {
