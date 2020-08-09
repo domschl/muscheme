@@ -6,19 +6,17 @@
 //
 #include "muscheme.h"
 
-#include <iostream>     // cout, cin, streambuf, hex, endl, sgetc, sbumpc
-#include <iomanip>      // setw, setfill
-#include <fstream>      // fstream
+#include <iostream>  // cout, cin, streambuf, hex, endl, sgetc, sbumpc
+#include <iomanip>   // setw, setfill
+#include <fstream>   // fstream
 
 // These inclusions required to set terminal mode.
-#include <termios.h>    // struct termios, tcgetattr(), tcsetattr()
-#include <stdio.h>      // perror(), stderr, stdin, fileno()
-
+#include <termios.h>  // struct termios, tcgetattr(), tcsetattr()
+#include <stdio.h>    // perror(), stderr, stdin, fileno()
 
 using msc::munum;
 using msc::Muscheme;
 using std::string;
-
 
 bool initCharReader(struct termios *pTermSaved) {
     struct termios t;
@@ -29,7 +27,8 @@ bool initCharReader(struct termios *pTermSaved) {
     t.c_cc[VTIME] = 0;
     t.c_cc[VMIN] = 1;
     if (tcsetattr(fileno(stdin), TCSANOW, &t) < 0) {
-        std::cout << "Unable to set terminal to single character mode" << std::endl;
+        std::cout << "Unable to set terminal to single character mode"
+                  << std::endl;
         return false;
     }
     return true;
@@ -45,9 +44,8 @@ bool quitCharReader(struct termios *pTermSaved) {
     return true;
 }
 
-string charReader(string prompt, bool *pQuit)
-{
-    *pQuit=false;
+string charReader(string prompt, bool *pQuit) {
+    *pQuit = false;
     struct termios termSaved;
     initCharReader(&termSaved);
     // Read single characters from cin.
@@ -55,38 +53,41 @@ string charReader(string prompt, bool *pQuit)
     bool done = false;
     string inp = "";
     std::cout << prompt;
-    
+
     while (!done) {
         char c;
-        if (pbuf->sgetc() == EOF) done = true;
+        if (pbuf->sgetc() == EOF)
+            done = true;
         c = pbuf->sbumpc();
         switch (c) {
-            case 0x0a:
-            case 0x0d:
-                done=true;
-                break;
-            case 0x03:
-            case 0x04:
-                done=true;
-                *pQuit=true;
-                break;
-            case 0x7f:
-            case 0x08:
-                if (inp.length()>0) {
-                    inp=inp.substr(0,inp.length()-1);
-                    std::cout << "\r"+prompt+inp+" " << std::flush;
-                    std::cout << "\r"+prompt+inp << std::flush;
-                }
-                break;
-            default:
-                inp+=c;
-                if (c<32) {
-                    std::cout << "[0x" << std::setw(2) << std::setfill('0') << std::hex << int(c) << "]" << std::flush;
-                } else {
-                //  std::cout << "[0x" << std::setw(2) << std::setfill('0') << std::hex << int(c) << "]" << std::flush;
+        case 0x0a:
+        case 0x0d:
+            done = true;
+            break;
+        case 0x03:
+        case 0x04:
+            done = true;
+            *pQuit = true;
+            break;
+        case 0x7f:
+        case 0x08:
+            if (inp.length() > 0) {
+                inp = inp.substr(0, inp.length() - 1);
+                std::cout << "\r" + prompt + inp + " " << std::flush;
+                std::cout << "\r" + prompt + inp << std::flush;
+            }
+            break;
+        default:
+            inp += c;
+            if (c < 32) {
+                std::cout << "[0x" << std::setw(2) << std::setfill('0')
+                          << std::hex << int(c) << "]" << std::flush;
+            } else {
+                //  std::cout << "[0x" << std::setw(2) << std::setfill('0') <<
+                //  std::hex << int(c) << "]" << std::flush;
                 std::cout << c << std::flush;
-                }
-                break;
+            }
+            break;
         }
     }
     quitCharReader(&termSaved);
@@ -99,7 +100,19 @@ void quitInterpreter(Muscheme &ms) {
     std::cout << "done freesyms" << std::endl;
 }
 
-void repl(std::string prompt = "μλ> ", std::string prompt2 = "  > ") {
+void termDetect(string &prompt, string &prompt2) {
+    if (!strcmp(std::getenv("TERM"), "vt420")) {
+        std::cout << "VT420" << std::endl;
+        prompt = "uL> ";
+        prompt2 = "  > ";
+    } else {
+        std::cout << "no special terminal" << std::endl;
+        prompt = "μλ> ";
+        prompt2 = "  > ";
+    }
+}
+
+void repl(std::string &prompt, std::string &prompt2) {
     std::string cmd, inp;
     Muscheme ms;
     bool fst;
@@ -118,14 +131,14 @@ void repl(std::string prompt = "μλ> ", std::string prompt2 = "  > ") {
             } else {
                 std::cout << prompt2;
             }
-            
+
             if (!getline(std::cin, inp)) {
                 quitInterpreter(ms);
                 return;
             };
             */
-            bool bq=false;
-            inp=charReader(prompt, &bq);
+            bool bq = false;
+            inp = charReader(prompt, &bq);
             /*
             bool il=true;
             inp="";
@@ -183,7 +196,10 @@ void repl(std::string prompt = "μλ> ", std::string prompt2 = "  > ") {
 }
 
 int main(int argc, char *argv[]) {
-    repl();
+    string prompt = "μλ> ", prompt2 = "  > ";
+    termDetect(prompt, prompt2);
+    std::cout << "p1:" << prompt << ", p2:" << prompt2 << std::endl;
+    repl(prompt, prompt2);
     std::cout << "end-repl" << std::endl;
     return 0;
 }
