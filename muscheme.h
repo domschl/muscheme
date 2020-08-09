@@ -832,31 +832,32 @@ class Muscheme {
                 printNode(p);
                 std::cout << std::endl;
                 if (p->type == atom::mnum) {
-                    pars[i-1]=munum(*(munum *)p->val);
+                    pars[i - 1] = munum(*(munum *)p->val);
                     nps += 1;
                 }
                 if (p->type == atom::inum) {
-                    pars[i-1]=munum(*(int *)p->val);
+                    pars[i - 1] = munum(*(int *)p->val);
                     nps += 1;
                 }
-                if (i==2) {
-                    if (nps!=2) {
-                        si=0;
-                        std::cout << "invalid parameters in compare!" << std::endl;
+                if (i == 2) {
+                    if (nps != 2) {
+                        si = 0;
+                        std::cout << "invalid parameters in compare!"
+                                  << std::endl;
                     } else {
                         std::cout << "cond " << si << cmd << *(int *)p->val;
                         if (cmd == "==")
-                            si = munum::mueq(pars[0],pars[1]);
+                            si = munum::mueq(pars[0], pars[1]);
                         else if (cmd == "!=")
-                            si = munum::mune(pars[0],pars[1]);
+                            si = munum::mune(pars[0], pars[1]);
                         else if (cmd == ">=")
-                            si = munum::muge(pars[0],pars[1]);
+                            si = munum::muge(pars[0], pars[1]);
                         else if (cmd == "<=")
-                            si = munum::mule(pars[0],pars[1]);
+                            si = munum::mule(pars[0], pars[1]);
                         else if (cmd == ">")
-                            si = munum::mugt(pars[0],pars[1]);
+                            si = munum::mugt(pars[0], pars[1]);
                         else if (cmd == "<")
-                            si = munum::mult(pars[0],pars[1]);
+                            si = munum::mult(pars[0], pars[1]);
                     }
                     std::cout << " => " << si << std::endl;
                 }
@@ -907,6 +908,29 @@ class Muscheme {
                 delete res0;
             res->right = nullptr;
             res->down = nullptr;
+            return res;
+        } else if (cmd == "fac") {
+            if (l != 2) {
+                std::cout << " fac needs 1 param" << std::endl;
+                inv = new astnode();
+                return inv;
+            }
+            munum si;
+            bool bF = false;
+            astnode *p = astind(past, 1);
+            if (p == nullptr) {
+                std::cout << "unexpected nullptr at fac params" << std::endl;
+                inv = new astnode();
+                return inv;
+            }
+            p = reduce(p, &bF);
+            if (p->type == atom::mnum) {
+                si = *(munum *)p->val;
+                si = munum::mufac(si);
+            }
+            if (bF)
+                delete p;
+            res = new astnode(si);
             return res;
         }
 
