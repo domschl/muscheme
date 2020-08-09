@@ -778,7 +778,7 @@ class Muscheme {
             // string ss="";
             bool bF = false;
             for (unsigned int i = 1; i < l; i++) {
-                printf("i: %d\n", i);
+                // printf("i: %d\n", i);
                 astnode *p = astind(past, i);
                 if (p == nullptr) {
                     std::cout << "unexpected nullptr at + params" << std::endl;
@@ -789,10 +789,10 @@ class Muscheme {
                 if (p->type == atom::mnum) {
                     if (i == 1) {
                         si = *(munum *)p->val;
-                        printf("1. %s\n", si.str().c_str());
+                        // printf("1. %s\n", si.str().c_str());
                     } else {
                         si2 = *(munum *)p->val;
-                        printf("ni. %s\n", si2.str().c_str());
+                        // printf("ni. %s\n", si2.str().c_str());
                         if (cmd == "+")
                             si = munum::muadd(si, si2);
                         else if (cmd == "-")

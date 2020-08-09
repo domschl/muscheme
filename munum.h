@@ -260,7 +260,7 @@ struct munum {
     static munum muadd(munum num1, munum num2) {
         bool fact = false;
         munum res;
-        if (num1.den != "1" || num2.den!= "1") {
+        if (num1.den != "1" || num2.den != "1") {
             printf("(+0) %s %s\n", num1.str().c_str(), num2.str().c_str());
             munum d1;
             d1 = num1;
@@ -296,7 +296,7 @@ struct munum {
     static munum musub(munum num1, munum num2) {
         bool fact = false;
         munum res;
-        if (num1.den != "1" || num2.den!= "1") {
+        if (num1.den != "1" || num2.den != "1") {
             printf("(+0) %s %s\n", num1.str().c_str(), num2.str().c_str());
             munum d1;
             d1 = num1;
@@ -331,7 +331,7 @@ struct munum {
         munum r;
         num1.pos = true;
         num2.pos = true;
-        res= muipsub(num2, num1);
+        res = muipsub(num2, num1);
         if (fact)
             res = mufactor(res);
         return res;
@@ -538,8 +538,8 @@ struct munum {
     }
 
     static munum mufactor(munum num1) {
-        printf("factor: %s\n", num1.str().c_str());
-        if (num1.den=="0") {
+        // printf("factor: %s\n", num1.str().c_str());
+        if (num1.den == "0") {
             num1.to_nan();
             return num1;
         }
@@ -632,10 +632,10 @@ struct munum {
     }
 
     static munum mudiv(munum num1, munum num2) {
-        munum inv=num2;
-        inv.nom=num2.den;
-        inv.den=num2.nom;
-        return mumul(num1,inv);
+        munum inv = num2;
+        inv.nom = num2.den;
+        inv.den = num2.nom;
+        return mumul(num1, inv);
     }
 
     static munum mumod(munum num1, munum num2) {
