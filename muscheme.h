@@ -818,9 +818,11 @@ class Muscheme {
                 return inv;
             }
             int si = 0;
+            int nps = 0;
             // double sf=0.0;
             // string ss="";
             bool bF = false;
+            munum pars[2];
             for (unsigned int i = 1; i < l; i++) {
                 astnode *p = astind(past, i);
                 std::cout << "prered: ";
@@ -829,25 +831,34 @@ class Muscheme {
                 std::cout << ", postred: ";
                 printNode(p);
                 std::cout << std::endl;
+                if (p->type == atom::mnum) {
+                    pars[i-1]=munum(*(munum *)p->val);
+                    nps += 1;
+                }
                 if (p->type == atom::inum) {
-                    if (i == 1)
-                        si = *(int *)p->val;
-                    else {
+                    pars[i-1]=munum(*(int *)p->val);
+                    nps += 1;
+                }
+                if (i==2) {
+                    if (nps!=2) {
+                        si=0;
+                        std::cout << "invalid parameters in compare!" << std::endl;
+                    } else {
                         std::cout << "cond " << si << cmd << *(int *)p->val;
                         if (cmd == "==")
-                            si = (si == *(int *)p->val);
+                            si = munum::mueq(pars[0],pars[1]);
                         else if (cmd == "!=")
-                            si = (si != *(int *)p->val);
+                            si = munum::mune(pars[0],pars[1]);
                         else if (cmd == ">=")
-                            si = (si >= *(int *)p->val);
+                            si = munum::muge(pars[0],pars[1]);
                         else if (cmd == "<=")
-                            si = (si <= *(int *)p->val);
+                            si = munum::mule(pars[0],pars[1]);
                         else if (cmd == ">")
-                            si = (si > *(int *)p->val);
+                            si = munum::mugt(pars[0],pars[1]);
                         else if (cmd == "<")
-                            si = (si < *(int *)p->val);
-                        std::cout << " => " << si << std::endl;
+                            si = munum::mult(pars[0],pars[1]);
                     }
+                    std::cout << " => " << si << std::endl;
                 }
                 if (bF)
                     delete p;
