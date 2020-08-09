@@ -21,7 +21,8 @@ using std::string;
 bool initCharReader(struct termios *pTermSaved) {
     struct termios t;
     // Set terminal to single character mode.
-    tcgetattr(fileno(stdin), pTermSaved);
+    tcgetattr(fileno(stdin), &t);
+    *pTermSaved = t;
 
     t.c_lflag &= (~ICANON & ~ECHO);
     t.c_cc[VTIME] = 0;
