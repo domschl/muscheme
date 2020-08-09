@@ -9,6 +9,7 @@
 #include <iostream>  // cout, cin, streambuf, hex, endl, sgetc, sbumpc
 #include <iomanip>   // setw, setfill
 #include <fstream>   // fstream
+#include <chrono>    // perf timings
 
 // These inclusions required to set terminal mode.
 #include <termios.h>  // struct termios, tcgetattr(), tcsetattr()
@@ -173,7 +174,11 @@ void repl(std::string &prompt, std::string &prompt2) {
                 quitInterpreter(ms);
                 return;
             }
+            auto start = std::chrono::steady_clock::now();
             ast = ms.parse(cmd, &state);
+            auto diff = std::chrono::steady_clock::now() - start;
+            std::cout << std::chrono::duration<double, std::nano>(diff).count()
+                      << " ns" << std::endl;
             if (state == Muscheme::parse_state::incomplete)
                 continue;
             break;
