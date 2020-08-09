@@ -174,11 +174,7 @@ void repl(std::string &prompt, std::string &prompt2) {
                 quitInterpreter(ms);
                 return;
             }
-            auto start = std::chrono::steady_clock::now();
             ast = ms.parse(cmd, &state);
-            auto diff = std::chrono::steady_clock::now() - start;
-            std::cout << std::chrono::duration<double, std::nano>(diff).count()
-                      << " ns" << std::endl;
             if (state == Muscheme::parse_state::incomplete)
                 continue;
             break;
@@ -187,7 +183,12 @@ void repl(std::string &prompt, std::string &prompt2) {
             printf("Err\n");
             continue;
         }
+        auto start = std::chrono::steady_clock::now();
         Muscheme::astnode *past = ms.receval(ast);
+        auto diff = std::chrono::steady_clock::now() - start;
+        std::cout << "Eval dt: "
+                  << std::chrono::duration<double, std::nano>(diff).count()
+                  << " ns" << std::endl;
         if (past != nullptr) {
             ans = past->to_str();
             if (past->val != nullptr) {

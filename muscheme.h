@@ -87,7 +87,7 @@ class Muscheme {
             size = sizeof(double);
             val = malloc(size);
             *(double *)val = f;
-            printf("create %f\n", *(double *)val);
+            // printf("create %f\n", *(double *)val);
             right = nullptr;
             down = nullptr;
         }
@@ -95,7 +95,7 @@ class Muscheme {
             type = atom::mnum;
             val = new munum(n);
             size = sizeof(*(munum *)val);
-            printf("create %s\n", ((munum *)val)->str().c_str());
+            // printf("create %s\n", ((munum *)val)->str().c_str());
             right = nullptr;
             down = nullptr;
         }
