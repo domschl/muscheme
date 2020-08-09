@@ -101,13 +101,14 @@ void quitInterpreter(Muscheme &ms) {
 }
 
 string termDetect(string &prompt, string &prompt2) {
-    string term(std::getenv("TERM"));
-    if (!strcmp(term.c_str(), "vt420")) {
+    const char *ct = std::getenv("TERM");
+    string term(ct);
+    if (term == "vt420") {
         std::cout << "VT420" << std::endl;
         prompt = "uL> ";
         prompt2 = "  > ";
     } else {
-        std::cout << "no special terminal" << std::endl;
+        // std::cout << "no special terminal" << std::endl;
         prompt = "μλ> ";
         prompt2 = "  > ";
     }
@@ -200,7 +201,7 @@ void repl(std::string &prompt, std::string &prompt2) {
 int main(int argc, char *argv[]) {
     string prompt = "μλ> ", prompt2 = "  > ";
     termDetect(prompt, prompt2);
-    std::cout << "p1:" << prompt << ", p2:" << prompt2 << std::endl;
+    // std::cout << "p1:" << prompt << ", p2:" << prompt2 << std::endl;
     repl(prompt, prompt2);
     std::cout << "end-repl" << std::endl;
     return 0;
