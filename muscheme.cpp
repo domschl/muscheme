@@ -105,11 +105,13 @@ string termDetect(string &prompt, string &prompt2) {
     const char *ct = std::getenv("TERM");
     string term(ct);
     if (term == "vt420") {
-    	string tc("\x1b+>"); // Map DEC tech charset into GR3 (VT420)
-    	string lambda("\x1bO\xec"); // single shot GR3, DEC tech char set lambda
-    	std::cout << tc;
+        string tc("\x1b+>");  // Map DEC tech charset into GR3 (VT420)
+        string lambda(
+            "\x1bO\xec");  // single shot GR3, DEC tech char set lambda
+        std::cout << tc;
+        string mu("\xb5");
         // std::cout << "VT420" << std::endl;
-        prompt = "µ"+lambda+"> ";
+        prompt = mu + lambda + "> ";
         prompt2 = "  > ";
     } else {
         // std::cout << "no special terminal" << std::endl;
