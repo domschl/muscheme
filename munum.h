@@ -92,6 +92,8 @@ struct munum {
                 pos = true;
                 type = mum_valid;
             }
+            while (n.length() > 1 && (n[0] == '0'))
+                n = n.substr(1);
             nom = n;
             den = "1";
             return;
@@ -110,6 +112,10 @@ struct munum {
                     }
                     den = n.substr(p1 + 1);
                 }
+                while (nom.length() > 1 && (nom[0] == '0'))
+                    nom = nom.substr(1);
+                while (den.length() > 1 && (den[0] == '0'))
+                    den = den.substr(1);
                 return;
             }
         }
@@ -133,6 +139,12 @@ struct munum {
         den = "1";
         type = mum_nan;
         pos = true;
+    }
+    void to_inf(bool _pos = true) {
+        nom = "0";
+        den = "1";
+        type = mum_inf;
+        pos = _pos;
     }
     string str() {
         switch (type) {
@@ -538,9 +550,9 @@ struct munum {
     }
 
     static munum mufactor(munum num1) {
-        // printf("factor: %s\n", num1.str().c_str());
+        printf("factor: %s\n", num1.str().c_str());
         if (num1.den == "0") {
-            num1.to_nan();
+            num1.to_inf(num1.pos);
             return num1;
         }
         munum n1(num1.nom), n2(num1.den);
@@ -632,6 +644,16 @@ struct munum {
     }
 
     static munum mudiv(munum num1, munum num2) {
+        munum res;
+        if (num2.nom == "0") {
+            if (num1.nom == "0") {
+                res.to_nan();
+                return res;
+            } else {
+                res.to_inf(num1.pos);
+                return res;
+            }
+        }
         munum inv = num2;
         inv.nom = num2.den;
         inv.den = num2.nom;
