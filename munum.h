@@ -279,9 +279,9 @@ struct munum {
             munum d1;
             d1 = num1;
             printf("(d1) %s\n", d1.str().c_str());
-            num1 = mumul(num1, munum(num2.den + '/' + num2.den));
+            num1 = mumul(num1, munum(num2.den + '/' + num2.den), false);
             printf("(+1pre) %s %s\n", num1.str().c_str(), d1.str().c_str());
-            num2 = mumul(num2, munum(d1.den + '/' + d1.den));
+            num2 = mumul(num2, munum(d1.den + '/' + d1.den), false);
             printf("(+1) %s %s\n", num1.str().c_str(), num2.str().c_str());
             fact = true;
         }
@@ -315,9 +315,9 @@ struct munum {
             munum d1;
             d1 = num1;
             printf("(d1) %s\n", d1.str().c_str());
-            num1 = mumul(num1, munum(num2.den + '/' + num2.den));
+            num1 = mumul(num1, munum(num2.den + '/' + num2.den), false);
             printf("(+1pre) %s %s\n", num1.str().c_str(), d1.str().c_str());
-            num2 = mumul(num2, munum(d1.den + '/' + d1.den));
+            num2 = mumul(num2, munum(d1.den + '/' + d1.den), false);
             printf("(+1) %s %s\n", num1.str().c_str(), num2.str().c_str());
             fact = true;
         }
@@ -421,7 +421,7 @@ struct munum {
         return acc;
     }
 
-    static munum mumul(munum num1, munum num2) {
+    static munum mumul(munum num1, munum num2, bool bFactor=true) {
         munum res = munum(0), n1, n2;
         if (num1.type != munum::mum_valid || num2.type != munum::mum_valid) {
             res.to_nan();
@@ -434,7 +434,7 @@ struct munum {
         n2 = munum(num2.den);
         res.den = mumulnat(n1, n2).nom;
         res.pos = (num1.pos == num2.pos);
-        res = mufactor(res);
+        if (bFactor) res = mufactor(res);
         return res;
     }
 
