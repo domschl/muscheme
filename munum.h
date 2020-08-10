@@ -7,6 +7,8 @@ using std::string;
 // using std::string::NPOS;
 #define NPOS (std::string::npos)
 
+string infSymbol = "∞";
+
 struct munum {
     enum munum_type { mum_valid, mum_nan, mum_inf };
 
@@ -150,9 +152,9 @@ struct munum {
         switch (type) {
         case mum_inf:
             if (pos)
-                return "INF";
+                return infSymbol;
             else
-                return "-INF";
+                return "-" + infSymbol;
             break;
         case mum_nan:
             return "NaN";
