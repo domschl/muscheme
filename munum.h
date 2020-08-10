@@ -136,6 +136,18 @@ struct munum {
         nom = std::to_string(n);
         den = "1";
     }
+    munum(int n, int d) {
+        if (n < 0) {
+            pos = false;
+            type = mum_valid;
+            n = (-n);
+        } else {
+            pos = true;
+            type = mum_valid;
+        }
+        nom = std::to_string(n);
+        den = std::to_string(d);
+    }
     void to_nan() {
         nom = "0";
         den = "1";
@@ -275,14 +287,14 @@ struct munum {
         bool fact = false;
         munum res;
         if (num1.den != "1" || num2.den != "1") {
-            printf("(+0) %s %s\n", num1.str().c_str(), num2.str().c_str());
+            // printf("(+0) %s %s\n", num1.str().c_str(), num2.str().c_str());
             munum d1;
             d1 = num1;
-            printf("(d1) %s\n", d1.str().c_str());
+            // printf("(d1) %s\n", d1.str().c_str());
             num1 = mumul(num1, munum(num2.den + '/' + num2.den), false);
-            printf("(+1pre) %s %s\n", num1.str().c_str(), d1.str().c_str());
+            // printf("(+1pre) %s %s\n", num1.str().c_str(), d1.str().c_str());
             num2 = mumul(num2, munum(d1.den + '/' + d1.den), false);
-            printf("(+1) %s %s\n", num1.str().c_str(), num2.str().c_str());
+            // printf("(+1) %s %s\n", num1.str().c_str(), num2.str().c_str());
             fact = true;
         }
         if (num1.pos == num2.pos) {
@@ -311,14 +323,14 @@ struct munum {
         bool fact = false;
         munum res;
         if (num1.den != "1" || num2.den != "1") {
-            printf("(+0) %s %s\n", num1.str().c_str(), num2.str().c_str());
+            // printf("(+0) %s %s\n", num1.str().c_str(), num2.str().c_str());
             munum d1;
             d1 = num1;
-            printf("(d1) %s\n", d1.str().c_str());
+            // printf("(d1) %s\n", d1.str().c_str());
             num1 = mumul(num1, munum(num2.den + '/' + num2.den), false);
-            printf("(+1pre) %s %s\n", num1.str().c_str(), d1.str().c_str());
+            // printf("(+1pre) %s %s\n", num1.str().c_str(), d1.str().c_str());
             num2 = mumul(num2, munum(d1.den + '/' + d1.den), false);
-            printf("(+1) %s %s\n", num1.str().c_str(), num2.str().c_str());
+            // printf("(+1) %s %s\n", num1.str().c_str(), num2.str().c_str());
             fact = true;
         }
         if (num1.pos && !num2.pos) {
@@ -552,7 +564,7 @@ struct munum {
     }
 
     static munum mufactor(munum num1) {
-        printf("factor: %s\n", num1.str().c_str());
+        // printf("factor: %s\n", num1.str().c_str());
         if (num1.den == "0") {
             num1.to_inf(num1.pos);
             return num1;
