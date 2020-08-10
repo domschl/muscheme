@@ -41,8 +41,8 @@ int testit(Muscheme &ms, bool verbose = false) {
                 printf("OK: %s is rational.\n", it.c_str());
         }
     }
-    std::vector<string> nrats{"0e/",  "/0.1", "/23424", "1/",
-                              "1/-1", "/",    "1/1/1",  "1.1/1", "/1", "//", "/0/"};
+    std::vector<string> nrats{"0e/",   "/0.1",  "/23424", "1/", "1/-1", "/",
+                              "1/1/1", "1.1/1", "/1",     "//", "/0/"};
     for (auto const &it : nints) {
         if (munum::isrational(it)) {
             printf("Fail: %s is NOT rational!\n", it.c_str());
@@ -102,7 +102,7 @@ int testit(Muscheme &ms, bool verbose = false) {
     return errs;
 }
 
-int nrand(int max_digits = 8, bool posneg = true, bool includeZero=true) {
+int nrand(int max_digits = 6, bool posneg = true, bool includeZero = true) {
     int digs[] = {10,      100,      1000,      10000,     100000,
                   1000000, 10000000, 100000000, 1000000000};
     if (max_digits < 1 || max_digits > 9)
@@ -114,12 +114,14 @@ int nrand(int max_digits = 8, bool posneg = true, bool includeZero=true) {
         if (rand() % 2)
             r = r * (-1);
     } else {
-        if (!includeZero) ++r;
+        if (!includeZero)
+            ++r;
     }
     return r;
 }
 
-int testnum(Muscheme &ms, int count = 1000, bool verbose = false, double eps=1e-8) {
+int testnum(Muscheme &ms, int count = 1000, bool verbose = false,
+            double eps = 1e-8) {
     int errs = 0;
     int i1, i2, i3, i4;
     munum a, b, c;
@@ -151,21 +153,23 @@ int testnum(Muscheme &ms, int count = 1000, bool verbose = false, double eps=1e-
                        c.str().c_str());
         }
 
-        a = munum(i1,i2);
-        b = munum(i3,i4);
-        c = munum::muadd(a,b);
+        a = munum(i1, i2);
+        b = munum(i3, i4);
+        c = munum::muadd(a, b);
         double cf = atof(c.nom.c_str()) / atof(c.den.c_str());
-        if (!c.pos) cf *= -1.0;
-        if (fabs((double)i1/(double)i2+(double)i3/(double)i4 - cf) < eps) {
+        if (!c.pos)
+            cf *= -1.0;
+        if (fabs((double)i1 / (double)i2 + (double)i3 / (double)i4 - cf) <
+            eps) {
             if (verbose)
-                printf("OK: %d/%d + %d/%d = %f, %f, %s\n", i1, i2, i3, i4, (double)i1/(double)i2 + (double)i3/(double)i4,
-                       cf,c.str().c_str());
+                printf("OK: %d/%d + %d/%d = %f, %f, %s\n", i1, i2, i3, i4,
+                       (double)i1 / (double)i2 + (double)i3 / (double)i4, cf,
+                       c.str().c_str());
         } else {
-            printf("Error: %d/%d + %d/%d = %f, not %f, %s\n", i1, i2, i3, i4, (double)i1/i2 + (double)i3/i4,
-                   cf,c.str().c_str());
+            printf("Error: %d/%d + %d/%d = %f, not %f, %s\n", i1, i2, i3, i4,
+                   (double)i1 / i2 + (double)i3 / i4, cf, c.str().c_str());
             errs += 1;
         }
-
     }
     return errs;
 }

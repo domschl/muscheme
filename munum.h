@@ -231,8 +231,8 @@ struct munum {
         int l, l1, l2;
         int c = 0, n1, n2, n3, n4, c2 = 0;
         munum rp, rn;
-        if (num1.den != num2.den || !num1.pos || !num2.pos ||
-            num1.type != munum::mum_valid || num2.type != munum::mum_valid) {
+        if (num1.den != num2.den || num1.type != munum::mum_valid ||
+            num1.pos != num2.pos || num2.type != munum::mum_valid) {
             rp.to_nan();
             return rp;
         }
@@ -268,6 +268,7 @@ struct munum {
             rn.nom = (char)(n4 + '0') + rn.nom;
         }
         rp.den = num1.den;
+        rn.den = num1.den;
         rp.pos = num1.pos;
         if (c != 0) {
             for (unsigned int i = 0; i < rn.nom.length(); i++) {
@@ -287,14 +288,10 @@ struct munum {
         bool fact = false;
         munum res;
         if (num1.den != "1" || num2.den != "1") {
-            // printf("(+0) %s %s\n", num1.str().c_str(), num2.str().c_str());
             munum d1;
             d1 = num1;
-            // printf("(d1) %s\n", d1.str().c_str());
             num1 = mumul(num1, munum(num2.den + '/' + num2.den), false);
-            // printf("(+1pre) %s %s\n", num1.str().c_str(), d1.str().c_str());
             num2 = mumul(num2, munum(d1.den + '/' + d1.den), false);
-            // printf("(+1) %s %s\n", num1.str().c_str(), num2.str().c_str());
             fact = true;
         }
         if (num1.pos == num2.pos) {
@@ -323,44 +320,33 @@ struct munum {
         bool fact = false;
         munum res;
         if (num1.den != "1" || num2.den != "1") {
-            // printf("(+0) %s %s\n", num1.str().c_str(), num2.str().c_str());
             munum d1;
             d1 = num1;
-            // printf("(d1) %s\n", d1.str().c_str());
             num1 = mumul(num1, munum(num2.den + '/' + num2.den), false);
-            // printf("(+1pre) %s %s\n", num1.str().c_str(), d1.str().c_str());
             num2 = mumul(num2, munum(d1.den + '/' + d1.den), false);
-            // printf("(+1) %s %s\n", num1.str().c_str(), num2.str().c_str());
             fact = true;
         }
-        if (num1.pos && !num2.pos) {
-            num2.pos = true;
-            res = muipadd(num1, num2);
-            if (fact)
-                res = mufactor(res);
-            return res;
-        }
-        if (num1.pos && num2.pos) {
+        if (num1.pos == num2.pos) {
             res = muipsub(num1, num2);
             if (fact)
                 res = mufactor(res);
             return res;
+        } else {
+            if (num1.pos) {
+                num2.pos = true;
+                res = muipadd(num1, num2);
+                if (fact)
+                    res = mufactor(res);
+                return res;
+            } else {
+                num1.pos = true;
+                res = muipadd(num1, num2);
+                res.pos = false;
+                if (fact)
+                    res = mufactor(res);
+                return res;
+            }
         }
-        if (!num1.pos && num2.pos) {
-            num2.pos = false;
-            res = muipadd(num1, num2);
-            if (fact)
-                res = mufactor(res);
-            return res;
-        }
-        // if (!num1.pos && !num2.pos)
-        munum r;
-        num1.pos = true;
-        num2.pos = true;
-        res = muipsub(num2, num1);
-        if (fact)
-            res = mufactor(res);
-        return res;
     }
 
     static munum mumulnat(munum num1, munum num2) {
@@ -433,7 +419,7 @@ struct munum {
         return acc;
     }
 
-    static munum mumul(munum num1, munum num2, bool bFactor=true) {
+    static munum mumul(munum num1, munum num2, bool bFactor = true) {
         munum res = munum(0), n1, n2;
         if (num1.type != munum::mum_valid || num2.type != munum::mum_valid) {
             res.to_nan();
@@ -446,7 +432,8 @@ struct munum {
         n2 = munum(num2.den);
         res.den = mumulnat(n1, n2).nom;
         res.pos = (num1.pos == num2.pos);
-        if (bFactor) res = mufactor(res);
+        if (bFactor)
+            res = mufactor(res);
         return res;
     }
 
@@ -575,6 +562,7 @@ struct munum {
         n2 = mudivnat(n2, gcd);
         num1.nom = n1.nom;
         num1.den = n2.nom;
+        // printf("factored: %s\n", num1.str().c_str());
         return num1;
     }
 
