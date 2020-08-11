@@ -705,5 +705,13 @@ struct munum {
         res = mudivmod(num1, num2);
         return res[1];
     }
+
+    friend std::ostream &operator<<(std::ostream &os, munum &num) {
+        if (!num.pos)
+            os << "-";
+        os << num.nom << "/" << num.den;
+        return os;
+    }
 };
+
 }  // namespace msc
