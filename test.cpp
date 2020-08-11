@@ -446,6 +446,15 @@ int testbigfac1000(int verbose = false) {
     }
 }
 
+int testtypeconv(Muscheme &ms, int n, bool verbose) {
+    munum n1(1, 2), n2, n3;
+    n3 = n1 + n1;
+    n2 = n1 + (munum)3;
+    printf("n2: %s\n", n2.str().c_str());
+    printf("n3: %s\n", n3.str().c_str());
+    return 0;
+}
+
 int main(int argc, char *argv[]) {
     Muscheme ms;
     bool verbose = false;
@@ -471,6 +480,7 @@ int main(int argc, char *argv[]) {
     errs += testcmpnum(ms, n, verbose);
     errs += testnummul(ms, n, verbose);
     errs += testmuipdiv(ms, n, verbose, true);
+    errs += testtypeconv(ms, n, verbose);
     dofacs(100, verbose);
     errs += testbigfac1000(verbose);
     if (errs == 0) {

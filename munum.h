@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <cmath>
 
 namespace msc {
 using std::string;
@@ -314,6 +315,30 @@ struct munum {
                 return res;
             }
         }
+    }
+    munum operator+(munum num2) {
+        return muadd(*this, num2);
+    }
+    munum operator-(munum num2) {
+        return musub(*this, num2);
+    }
+    munum operator*(munum num2) {
+        return mumul(*this, num2);
+    }
+    munum operator/(munum num2) {
+        return mudiv(*this, num2);
+    }
+
+    operator double() {
+        if (type == mum_valid) {
+            if (den == "1")
+                return atof(nom.c_str());
+            else
+                return (atof(nom.c_str()) / atof(den.c_str()));
+        }
+        if (type == mum_inf)
+            return INFINITY;
+        return NAN;
     }
 
     static munum musub(munum num1, munum num2) {
