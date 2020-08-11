@@ -131,25 +131,25 @@ int testnum(Muscheme &ms, int count = 1000, bool verbose = false,
         i3 = nrand();
         i4 = nrand(8, false, false);
         a = munum(i1);
-        b = munum(i2);
+        b = munum(i3);
         c = a.muadd(a, b);
-        if (i1 + i2 != atoi(c.str().c_str())) {
-            printf("Error: %d + %d = %d, not %s %s\n", i1, i2, i1 + i2,
+        if (i1 + i3 != atoi(c.str().c_str())) {
+            printf("Error: %d + %d = %d, not %s %s\n", i1, i3, i1 + i3,
                    c.str().c_str(), c.nom.c_str());
             errs += 1;
         } else {
             if (verbose)
-                printf("OK: %d + %d = %d, %s\n", i1, i2, i1 + i2,
+                printf("OK: %d + %d = %d, %s\n", i1, i3, i1 + i3,
                        c.str().c_str());
         }
         c = a.musub(a, b);
-        if (i1 - i2 != atoi(c.str().c_str())) {
-            printf("Error: %d - %d = %d, not %s %s\n", i1, i2, i1 - i2,
+        if (i1 - i3 != atoi(c.str().c_str())) {
+            printf("Error: %d - %d = %d, not %s %s\n", i1, i3, i1 - i3,
                    c.str().c_str(), c.nom.c_str());
             errs += 1;
         } else {
             if (verbose)
-                printf("OK: %d - %d = %d, %s\n", i1, i2, i1 - i2,
+                printf("OK: %d - %d = %d, %s\n", i1, i3, i1 - i3,
                        c.str().c_str());
         }
 
@@ -171,6 +171,22 @@ int testnum(Muscheme &ms, int count = 1000, bool verbose = false,
             errs += 1;
         }
     }
+
+    c = munum::musub(a, b);
+    double cf = atof(c.nom.c_str()) / atof(c.den.c_str());
+    if (!c.pos)
+        cf *= -1.0;
+    if (fabs((double)i1 / (double)i2 - (double)i3 / (double)i4 - cf) < eps) {
+        if (verbose)
+            printf("OK: %d/%d - %d/%d = %f, %f, %s\n", i1, i2, i3, i4,
+                   (double)i1 / (double)i2 - (double)i3 / (double)i4, cf,
+                   c.str().c_str());
+    } else {
+        printf("Error: %d/%d - %d/%d = %f, not %f, %s\n", i1, i2, i3, i4,
+               (double)i1 / i2 - (double)i3 / i4, cf, c.str().c_str());
+        errs += 1;
+    }
+
     return errs;
 }
 
@@ -263,24 +279,45 @@ int testcmpnum(Muscheme &ms, int count = 1000, bool verbose = false) {
     return errs;
 }
 
-int testnummul(Muscheme &ms, int count = 1000, bool verbose = false) {
+int testnummul(Muscheme &ms, int count = 1000, bool verbose = false,
+               double eps = 1e-4) {
     int errs = 0;
-    int i1, i2;
+    int i1, i2, i3, i4;
     munum a, b, c;
     for (int i = 0; i < count; i++) {
-        i1 = nrand(4);
-        i2 = nrand(4);
+        i1 = nrand();
+        i2 = nrand(8, false, false);
+        i3 = nrand();
+        i4 = nrand(8, false, false);
         a = munum(i1);
-        b = munum(i2);
+        b = munum(i3);
         c = a.mumul(a, b);
-        if (i1 * i2 != atoi(c.str().c_str())) {
-            printf("Error: %d * %d = %d, not %s %s\n", i1, i2, i1 * i2,
+        if (i1 * i3 != atoi(c.str().c_str())) {
+            printf("Error: %d * %d = %d, not %s %s\n", i1, i3, i1 * i3,
                    c.str().c_str(), c.nom.c_str());
             errs += 1;
         } else {
             if (verbose)
-                printf("OK: %d * %d = %d, %s\n", i1, i2, i1 * i2,
+                printf("OK: %d * %d = %d, %s\n", i1, i3, i1 * i3,
                        c.str().c_str());
+        }
+
+        a = munum(i1, i2);
+        b = munum(i3, i4);
+        c = munum::mumul(a, b);
+        double cf = atof(c.nom.c_str()) / atof(c.den.c_str());
+        if (!c.pos)
+            cf *= -1.0;
+        if (fabs((double)i1 / (double)i2 * (double)i3 / (double)i4 - cf) <
+            eps) {
+            if (verbose)
+                printf("OK: %d/%d * %d/%d = %f, %f, %s\n", i1, i2, i3, i4,
+                       (double)i1 / (double)i2 * (double)i3 / (double)i4, cf,
+                       c.str().c_str());
+        } else {
+            printf("Error: %d/%d * %d/%d = %f, not %f, %s\n", i1, i2, i3, i4,
+                   (double)i1 / i2 * (double)i3 / i4, cf, c.str().c_str());
+            errs += 1;
         }
     }
     return errs;

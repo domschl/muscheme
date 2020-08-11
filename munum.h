@@ -327,7 +327,12 @@ struct munum {
             fact = true;
         }
         if (num1.pos == num2.pos) {
+            bool p = num1.pos;
+            num1.pos = true;
+            num2.pos = true;
             res = muipsub(num1, num2);
+            if (!p)
+                res.pos = !res.pos;
             if (fact)
                 res = mufactor(res);
             return res;
