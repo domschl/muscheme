@@ -35,6 +35,8 @@ struct munum {
     }
 
     static bool isnat(string tok) {
+        if (tok.length() && tok[0] == '+')
+            tok=tok.substr(1);
         if (tok.length() == 0)
             return false;
         std::string isn = "0123456789";
@@ -49,6 +51,8 @@ struct munum {
         if (tok.length() == 0)
             return false;
         if (tok[0] == '-')
+            return isnat(tok.substr(1));
+        if (tok.length() && tok[0] == '+')
             return isnat(tok.substr(1));
         return isnat(tok);
     }
@@ -159,29 +163,30 @@ struct munum {
         ss << std::setprecision(std::numeric_limits<double>::digits10) << f;
         int exp=0;
         string s(ss.str());
-        int p = s.find('e');
 
+        std::cout << "s=" << s << std::endl;
         if (s=="INF" || s=="INFINITY" || s==infSymbol) {
             to_inf();
             return;
         }
         if (!isfloat(s)) {
+            std::cout << "s=" << s << " is no float." << std::endl;
             to_nan();
             return;
         }
+
+        int p = s.find('e');
         if (p!=NPOS) {
             exp=atoi(s.substr(p+1).c_str());
             s=s.substr(0,p);
         }
-        std::cout << "s=" << s << std::endl;
         p=s.find('.');
+        den="1";
         if (p==NPOS) {
             nom=s;
-            den=1;
         } else {
             string fr=s.substr(p+1);
             nom=s.substr(0,p)+fr;
-            den="1";
             for (int i=0; i<fr.length(); i++) den+="0";
         }
         if (exp<0) for (int i=0; i>exp; i--) den+="0";
@@ -189,7 +194,7 @@ struct munum {
         if (nom.length() && nom[0]=='-') {
             pos=false;
             nom=nom.substr(1);
-        }
+        } else pos=true;
         type=mum_valid;
     }
     void to_nan() {
