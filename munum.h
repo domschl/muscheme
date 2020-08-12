@@ -703,9 +703,20 @@ struct munum {
 
     static bool muapproxeq(munum num1, double num2, double *perr = nullptr,
                            double eps = 1.e-6) {
+        if (num1.type == mum_inf) {
+            if (num1.pos) {
+                if (num2 == INFINITY)
+                    return true;
+            } else {
+                if (num2 == -INFINITY)
+                    return true;
+            }
+        }
         double df = std::fabs((double)num1 - num2);
         if (perr != nullptr)
             *perr = df;
+        if (std::fabs(num2) > 1.0)
+            df = df / std::fabs(num2);
         if (df < eps)
             return true;
         else

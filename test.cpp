@@ -1,6 +1,7 @@
 #include "muscheme.h"
 #include "math.h"
 #include <string>
+#include <chrono>
 
 using msc::munum;
 using msc::Muscheme;
@@ -203,11 +204,11 @@ int testnum2(Muscheme &ms, int count = 1000, bool verbose = false,
     double da, db, err;
     string numbertype, testtype;
     for (int i = 0; i < count; i++) {
-        i1 = nrand();
-        i2 = nrand(8, false, false);
-        i3 = nrand();
-        i4 = nrand(8, false, false);
         for (int j = 0; j < 3; j++) {
+            i1 = nrand(8);
+            i2 = nrand(8, false, false);
+            i3 = nrand(8);
+            i4 = nrand(8, false, false);
             switch (j) {
             case 0:  // Integer
                 a = munum(i1);
@@ -238,10 +239,98 @@ int testnum2(Muscheme &ms, int count = 1000, bool verbose = false,
         if (munum::muapproxeq(a, da, &err, 1e-6)) {
             if (verbose)
                 cout << "Ok:" << a << "≈" << da << ", err=" << err
-                     << "test: " << testtype << "->" << numbertype << endl;
+                     << ", test: " << testtype << "->" << numbertype << endl;
         } else {
             cout << "Error:" << a << "!≈" << da << ", err=" << err
-                 << "test: " << testtype << "->" << numbertype << endl;
+                 << ", test: " << testtype << "->" << numbertype << endl;
+            errs += 1;
+        }
+
+        testtype = "addition";
+        if (munum::muapproxeq(a + b, da + db, &err, 1e-6)) {
+            if (verbose)
+                cout << "Ok:" << a << "+" << b << "≈" << da << "+" << db << "="
+                     << da + db << ", err=" << err << ", test: " << testtype
+                     << "->" << numbertype << endl;
+        } else {
+            cout << "Error:" << a << "+" << b << "!≈" << da << "+" << db << "="
+                 << da + db << ", err=" << err << ", test: " << testtype << "->"
+                 << numbertype << endl;
+            errs += 1;
+        }
+
+        testtype = "subtraction";
+        if (munum::muapproxeq(a - b, da - db, &err, 1e-6)) {
+            if (verbose)
+                cout << "Ok:" << a << "-" << b << "≈" << da << "-" << db << "="
+                     << da - db << ", err=" << err << ", test: " << testtype
+                     << "->" << numbertype << endl;
+        } else {
+            cout << "Error:" << a << "-" << b << "!≈" << da << "-" << db << "="
+                 << da - db << ", err=" << err << ", test: " << testtype << "->"
+                 << numbertype << endl;
+            errs += 1;
+        }
+
+        testtype = "multiplication";
+        if (munum::muapproxeq(a * b, da * db, &err, 1e-6)) {
+            if (verbose)
+                cout << "Ok:" << a << "*" << b << "≈" << da << "*" << db << "="
+                     << da * db << ", err=" << err << ", test: " << testtype
+                     << "->" << numbertype << endl;
+        } else {
+            cout << "Error:" << a << "*" << b << "!≈" << da << "*" << db << "="
+                 << da * db << ", err=" << err << ", test: " << testtype << "->"
+                 << numbertype << endl;
+            errs += 1;
+        }
+
+        testtype = "division";
+        if (munum::muapproxeq(a / b, da / db, &err, 1e-6)) {
+            if (verbose)
+                cout << "Ok:" << a << "/" << b << "≈" << da << "/" << db << "="
+                     << da / db << ", err=" << err << "test: " << testtype
+                     << "->" << numbertype << endl;
+        } else {
+            cout << "Error:" << a << "/" << b << "!≈" << da << "/" << db << "="
+                 << da / db << ", err=" << err << ", test: " << testtype << "->"
+                 << numbertype << endl;
+            errs += 1;
+        }
+
+        testtype = "modulo";
+        munum ai = munum(i1);
+        munum bi = munum(i4);
+        if (munum::muapproxeq(ai % bi, i1 % i4, &err, 1e-6)) {
+            if (verbose)
+                cout << "Ok:" << ai << "%" << bi << "≈" << i1 << "%" << i4
+                     << "=" << i1 % i4 << ", err=" << err
+                     << ", test: " << testtype << "->" << numbertype << endl;
+        } else {
+            cout << "Error:" << ai << "%" << bi << "!≈" << i1 << "%" << i4
+                 << "=" << i1 % i4 << ", err=" << err << ", test: " << testtype
+                 << "->" << numbertype << endl;
+            errs += 1;
+        }
+
+        testtype = "power";
+        int i1r = i1 % 1000 - 500;
+        int i2r = i2 % 100 + 1;
+        a = munum(i1r, i2r);
+        da = (double)i1r / (double)i2r;
+        int i3r = i3 % 50;
+        bi = munum(i3r);
+        double intr = pow(da, i3r);
+        if (munum::muapproxeq(a ^ bi, intr, &err, 1e-6)) {
+            if (verbose)
+                cout << "Ok:" << a << "^" << bi << "=" << (double)(a ^ bi)
+                     << " ≈ " << da << "^" << i3r << "=" << intr
+                     << ", err=" << err << ", test: " << testtype << "->"
+                     << numbertype << endl;
+        } else {
+            cout << "Error:" << a << "^" << bi << "=" << (double)(a ^ bi)
+                 << " !≈ " << da << "^" << i3r << "=" << intr << ", err=" << err
+                 << ", test: " << testtype << "->" << numbertype << endl;
             errs += 1;
         }
     }
@@ -534,6 +623,8 @@ int main(int argc, char *argv[]) {
     int n = 100;
     if (big)
         n = 1000000;
+
+    auto start = std::chrono::steady_clock::now();
     int errs = testit(ms);
     errs += testnum(ms, n, verbose);
     errs += testnum2(ms, n, verbose);
@@ -543,11 +634,16 @@ int main(int argc, char *argv[]) {
     errs += testtypeconv(ms, n, verbose);
     dofacs(100, verbose);
     errs += testbigfac1000(verbose);
+    auto diff = std::chrono::steady_clock::now() - start;
     if (errs == 0) {
-        printf("All tests passed!\n");
+        cout << "All tests passed! ("
+             << std::chrono::duration<double, std::milli>(diff).count()
+             << ") ms" << endl;
         return 0;
     } else {
-        printf("%d tests failed!\n", errs);
+        cout << errs << " tests failed! ("
+             << std::chrono::duration<double, std::milli>(diff).count()
+             << ") ms" << endl;
         return -1;
     }
 }
