@@ -36,7 +36,7 @@ struct munum {
 
     static bool isnat(string tok) {
         if (tok.length() && tok[0] == '+')
-            tok=tok.substr(1);
+            tok = tok.substr(1);
         if (tok.length() == 0)
             return false;
         std::string isn = "0123456789";
@@ -158,14 +158,14 @@ struct munum {
     }
     munum(double f) {
         std::stringstream ss;
-        //string num,den;
-        //bool pos=true;
+        // string num,den;
+        // bool pos=true;
         ss << std::setprecision(std::numeric_limits<double>::digits10) << f;
-        int exp=0;
+        int exp = 0;
         string s(ss.str());
 
         std::cout << "s=" << s << std::endl;
-        if (s=="INF" || s=="INFINITY" || s==infSymbol) {
+        if (s == "INF" || s == "INFINITY" || s == infSymbol) {
             to_inf();
             return;
         }
@@ -176,26 +176,32 @@ struct munum {
         }
 
         int p = s.find('e');
-        if (p!=NPOS) {
-            exp=atoi(s.substr(p+1).c_str());
-            s=s.substr(0,p);
+        if (p != NPOS) {
+            exp = atoi(s.substr(p + 1).c_str());
+            s = s.substr(0, p);
         }
-        p=s.find('.');
-        den="1";
-        if (p==NPOS) {
-            nom=s;
+        p = s.find('.');
+        den = "1";
+        if (p == NPOS) {
+            nom = s;
         } else {
-            string fr=s.substr(p+1);
-            nom=s.substr(0,p)+fr;
-            for (int i=0; i<fr.length(); i++) den+="0";
+            string fr = s.substr(p + 1);
+            nom = s.substr(0, p) + fr;
+            for (int i = 0; i < fr.length(); i++)
+                den += "0";
         }
-        if (exp<0) for (int i=0; i>exp; i--) den+="0";
-        if (exp>0) for (int i=0; i<exp; i++) nom+="0";
-        if (nom.length() && nom[0]=='-') {
-            pos=false;
-            nom=nom.substr(1);
-        } else pos=true;
-        type=mum_valid;
+        if (exp < 0)
+            for (int i = 0; i > exp; i--)
+                den += "0";
+        if (exp > 0)
+            for (int i = 0; i < exp; i++)
+                nom += "0";
+        if (nom.length() && nom[0] == '-') {
+            pos = false;
+            nom = nom.substr(1);
+        } else
+            pos = true;
+        type = mum_valid;
     }
     void to_nan() {
         nom = "0";
@@ -377,10 +383,62 @@ struct munum {
         return mudiv(*this, num2);
     }
     munum operator%(munum num2) {
-        return mumod(*this,num2);
+        return mumod(*this, num2);
     }
     munum operator^(munum num2) {
-        return mupow(*this,num2);
+        return mupow(*this, num2);
+    }
+
+    munum operator++() {
+        *this = muadd(*this, munum(1));
+        return *this;
+    }
+    munum operator--() {
+        *this = musub(*this, munum(1));
+        return *this;
+    }
+    munum operator+=(munum num2) {
+        *this = muadd(*this, num2);
+        return *this;
+    }
+    munum operator-=(munum num2) {
+        *this = musub(*this, num2);
+        return *this;
+    }
+    munum operator*=(munum num2) {
+        *this = mumul(*this, num2);
+        return *this;
+    }
+    munum operator/=(munum num2) {
+        *this = mudiv(*this, num2);
+        return *this;
+    }
+    munum operator%=(munum num2) {
+        *this = mumod(*this, num2);
+        return *this;
+    }
+    munum operator^=(munum num2) {
+        *this = mupow(*this, num2);
+        return *this;
+    }
+
+    munum operator==(munum num2) {
+        return mueq(*this, num2);
+    }
+    munum operator!=(munum num2) {
+        return mune(*this, num2);
+    }
+    munum operator>(munum num2) {
+        return mugt(*this, num2);
+    }
+    munum operatorlt(munum num2) {
+        return mult(*this, num2);
+    }
+    munum operator>=(munum num2) {
+        return muge(*this, num2);
+    }
+    munum operator<=(munum num2) {
+        return mule(*this, num2);
     }
 
     operator double() {
@@ -769,21 +827,21 @@ struct munum {
 
     static munum muippow(munum num1, munum num2) {
         munum r;
-        if (num2.den != "1" || !num2.pos ||
-            num1.type != munum::mum_valid || num2.type != munum::mum_valid) {
+        if (num2.den != "1" || !num2.pos || num1.type != munum::mum_valid ||
+            num2.type != munum::mum_valid) {
             r.to_nan();
             return r;
         }
-        if (num2.nom=="0") {
-            r=munum(1);
+        if (num2.nom == "0") {
+            r = munum(1);
             return r;
         }
-        if (mueq(mumod(num2,2),munum(1))) {
-            num2=musub(num2,munum(1));
-            return mumul(num1,muippow(num1,num2));
+        if (mueq(mumod(num2, 2), munum(1))) {
+            num2 = musub(num2, munum(1));
+            return mumul(num1, muippow(num1, num2));
         } else {
-            munum p = muippow(num1,mudiv(num2,munum(2)));
-            return mumul(p,p);
+            munum p = muippow(num1, mudiv(num2, munum(2)));
+            return mumul(p, p);
         }
         /* from:  Eli Bendersky's website, Exponentiation by squaring
         def expt_rec(a, b):
@@ -799,18 +857,19 @@ struct munum {
 
     static munum mupow(munum num1, munum num2) {
         munum r;
-        if (num2.den != "1" || num1.type != munum::mum_valid || num2.type != munum::mum_valid) {
+        if (num2.den != "1" || num1.type != munum::mum_valid ||
+            num2.type != munum::mum_valid) {
             r.to_nan();
             return r;
         }
-        bool neg=false;
+        bool neg = false;
         if (!num2.pos) {
-            neg=true;
-            num2.pos=true;
+            neg = true;
+            num2.pos = true;
         }
-        r=muippow(num1,num2);
+        r = muippow(num1, num2);
         if (neg) {
-            r=mudiv(munum(1),r);
+            r = mudiv(munum(1), r);
         }
         return r;
     }
