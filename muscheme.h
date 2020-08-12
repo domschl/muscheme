@@ -12,8 +12,6 @@ class Muscheme {
   public:
     enum atom {
         nul = 0,
-        inum,
-        fnum,
         mnum,
         str,
         symbol,
@@ -24,7 +22,7 @@ class Muscheme {
         cmt,
         qt
     };
-    std::vector<std::string> atomnames{"nul",   "inum",   "fnum", "mnum",
+    std::vector<std::string> atomnames{"nul",   "mnum",
                                        "str",   "symbol", "proc", "list",
                                        "lista", "liste",  "cmt",  "qt"};
     enum astval { valid, invalid, empty };
@@ -74,23 +72,6 @@ class Muscheme {
             right = nullptr;
             down = nullptr;
         }
-        astnode(int i) {
-            type = atom::inum;
-            size = sizeof(int);
-            val = malloc(size);
-            *(int *)val = i;
-            right = nullptr;
-            down = nullptr;
-        }
-        astnode(double f) {
-            type = atom::fnum;
-            size = sizeof(double);
-            val = malloc(size);
-            *(double *)val = f;
-            // printf("create %f\n", *(double *)val);
-            right = nullptr;
-            down = nullptr;
-        }
         astnode(const munum &n) {
             type = atom::mnum;
             val = new munum(n);
@@ -112,10 +93,6 @@ class Muscheme {
                 return ";" + string((char *)val);
             case atom::symbol:
                 return string((char *)val);
-            case atom::inum:
-                return std::to_string((*(int *)val));
-            case atom::fnum:
-                return std::to_string((*(double *)val));
             case atom::mnum:
                 return ((munum *)val)->str();
             default:
@@ -343,7 +320,7 @@ class Muscheme {
             if (munum::isrational(tok))
                 return atom::mnum;
             if (munum::isfloat(tok))
-                return atom::fnum;
+                return atom::mnum;
             if (tok == "-")
                 return atom::symbol;
             printf("Invalid number token: %s\n", tok.c_str());
@@ -408,41 +385,8 @@ class Muscheme {
                         printf("AST stack corruption!\n");
                     }
                     break;
-                case atom::inum:
-                    pastnode = new astnode();
-                    /* xxx */
-                    pastnode->type = atom::inum;
-                    pastnode->size = sizeof(int);
-                    pastnode->val = malloc(pastnode->size);
-                    ival = atoi(toks[i].c_str());
-                    std::memcpy(pastnode->val, (const void *)&ival,
-                                pastnode->size);
-                    ast.push_back(pastnode);
-                    if (plastd != nullptr)
-                        plastd->down = pastnode;
-                    if (plastr != nullptr)
-                        plastr->right = pastnode;
-                    plastr = pastnode;
-                    plastd = nullptr;
-                    break;
                 case atom::mnum:
                     pastnode = new astnode(munum(toks[i]));
-                    ast.push_back(pastnode);
-                    if (plastd != nullptr)
-                        plastd->down = pastnode;
-                    if (plastr != nullptr)
-                        plastr->right = pastnode;
-                    plastr = pastnode;
-                    plastd = nullptr;
-                    break;
-                case atom::fnum:
-                    pastnode = new astnode();
-                    pastnode->type = atom::fnum;
-                    pastnode->size = sizeof(double);
-                    pastnode->val = malloc(pastnode->size);
-                    fval = atof(toks[i].c_str());
-                    std::memcpy(pastnode->val, (const void *)&fval,
-                                pastnode->size);
                     ast.push_back(pastnode);
                     if (plastd != nullptr)
                         plastd->down = pastnode;
@@ -712,8 +656,7 @@ class Muscheme {
             return inv;
         }
         if (past->type != atom::symbol) {
-            if (past->type == atom::inum || past->type == atom::fnum ||
-                past->type == atom::mnum || past->type == atom::str)
+            if (past->type == atom::mnum || past->type == atom::str)
                 return past;
             std::cout << "first param needs to be symbol: "
                       << atomnames[past->type] << std::endl;
@@ -767,7 +710,7 @@ class Muscheme {
             symstore[pn->to_str()] = newexpr(res, nullptr, nullptr, true, ast);
             return nullptr;
         } else if (cmd == "+" || cmd == "*" || cmd == "-" || cmd == "/" ||
-                   cmd == "mod") {
+                   cmd == "%" || cmd == "^") {
             if (l < 3) {
                 std::cout << "not enough + params" << std::endl;
                 inv = new astnode();
@@ -794,15 +737,17 @@ class Muscheme {
                         si2 = *(munum *)p->val;
                         // printf("ni. %s\n", si2.str().c_str());
                         if (cmd == "+")
-                            si = munum::muadd(si, si2);
+                            si += si2;
                         else if (cmd == "-")
-                            si = munum::musub(si, si2);
+                            si -= si2;
                         else if (cmd == "*")
-                            si = munum::mumul(si, si2);
+                            si *= si2;
                         else if (cmd == "/")
-                            si = munum::mudiv(si, si2);
-                        else if (cmd == "mod")
-                            si = munum::mumod(si, si2);
+                            si /= si2;
+                        else if (cmd == "%")
+                            si %= si2;
+                        else if (cmd == "^")
+                            si ^= si2;
                     }
                 }
                 if (bF)
@@ -835,10 +780,6 @@ class Muscheme {
                     pars[i - 1] = munum(*(munum *)p->val);
                     nps += 1;
                 }
-                if (p->type == atom::inum) {
-                    pars[i - 1] = munum(*(int *)p->val);
-                    nps += 1;
-                }
                 if (i == 2) {
                     if (nps != 2) {
                         si = 0;
@@ -847,17 +788,17 @@ class Muscheme {
                     } else {
                         std::cout << "cond " << si << cmd << *(int *)p->val;
                         if (cmd == "==")
-                            si = munum::mueq(pars[0], pars[1]);
+                            si = (pars[0]==pars[1]);
                         else if (cmd == "!=")
-                            si = munum::mune(pars[0], pars[1]);
+                            si = (pars[0]!= pars[1]);
                         else if (cmd == ">=")
-                            si = munum::muge(pars[0], pars[1]);
+                            si = (pars[0]>= pars[1]);
                         else if (cmd == "<=")
-                            si = munum::mule(pars[0], pars[1]);
+                            si = (pars[0]<= pars[1]);
                         else if (cmd == ">")
-                            si = munum::mugt(pars[0], pars[1]);
+                            si = (pars[0]> pars[1]);
                         else if (cmd == "<")
-                            si = munum::mult(pars[0], pars[1]);
+                            si = (pars[0]< pars[1]);
                     }
                     std::cout << " => " << si << std::endl;
                 }
@@ -879,7 +820,7 @@ class Muscheme {
             if (l == 4)
                 p3 = astind(past, 3);
             astnode *cond = reduce(p1, &bF);
-            if (cond == nullptr || cond->type != atom::inum) {
+            if (cond == nullptr || cond->type != atom::mnum) {
                 astnode *inv = new astnode();
                 return inv;
             }
@@ -932,7 +873,31 @@ class Muscheme {
                 delete p;
             res = new astnode(si);
             return res;
-        }
+        } else if (cmd == "float") {
+            if (l != 2) {
+                std::cout << " fac needs 1 param" << std::endl;
+                inv = new astnode();
+                return inv;
+            }
+            munum si;
+            bool bF = false;
+            astnode *p = astind(past, 1);
+            if (p == nullptr) {
+                std::cout << "unexpected nullptr at fac params" << std::endl;
+                inv = new astnode();
+                return inv;
+            }
+            p = reduce(p, &bF);
+            if (p->type == atom::mnum) {
+                si = *(munum *)p->val;
+                double fi=(double)si;
+                std::cout << fi << std::endl;
+            }
+            if (bF)
+                delete p;
+            res = new astnode(si);
+            return res;
+        }  
 
         std::cout << " something is not implemented: " << past->to_str()
                   << std::endl;
