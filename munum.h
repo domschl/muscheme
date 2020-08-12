@@ -2,6 +2,9 @@
 #include <vector>
 #include <string>
 #include <cmath>
+#include <sstream>
+#include <limits>
+#include <iomanip>
 
 namespace msc {
 using std::string;
@@ -148,6 +151,46 @@ struct munum {
         }
         nom = std::to_string(n);
         den = std::to_string(d);
+    }
+    munum(double f) {
+        std::stringstream ss;
+        //string num,den;
+        //bool pos=true;
+        ss << std::setprecision(std::numeric_limits<double>::digits10) << f;
+        int exp=0;
+        string s(ss.str());
+        int p = s.find('e');
+
+        if (s=="INF" || s=="INFINITY" || s==infSymbol) {
+            to_inf();
+            return;
+        }
+        if (!isfloat(s)) {
+            to_nan();
+            return;
+        }
+        if (p!=NPOS) {
+            exp=atoi(s.substr(p+1).c_str());
+            s=s.substr(0,p);
+        }
+        std::cout << "s=" << s << std::endl;
+        p=s.find('.');
+        if (p==NPOS) {
+            nom=s;
+            den=1;
+        } else {
+            string fr=s.substr(p+1);
+            nom=s.substr(0,p)+fr;
+            den="1";
+            for (int i=0; i<fr.length(); i++) den+="0";
+        }
+        if (exp<0) for (int i=0; i>exp; i--) den+="0";
+        if (exp>0) for (int i=0; i<exp; i++) nom+="0";
+        if (nom.length() && nom[0]=='-') {
+            pos=false;
+            nom=nom.substr(1);
+        }
+        type=mum_valid;
     }
     void to_nan() {
         nom = "0";
@@ -334,7 +377,7 @@ struct munum {
             if (den == "1")
                 return atof(nom.c_str());
             else
-                return (atof(nom.c_str()) / atof(den.c_str()));
+                return ((double)atof(nom.c_str()) / (double)atof(den.c_str()));
         }
         if (type == mum_inf)
             return INFINITY;
