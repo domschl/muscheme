@@ -1,8 +1,11 @@
 #include "muscheme.h"
 #include "math.h"
+#include <string>
 
 using msc::munum;
 using msc::Muscheme;
+using std::cout;
+using std::endl;
 using std::string;
 
 int testit(Muscheme &ms, bool verbose = false) {
@@ -187,6 +190,60 @@ int testnum(Muscheme &ms, int count = 1000, bool verbose = false,
         printf("Error: %d/%d - %d/%d = %f, not %f, %s\n", i1, i2, i3, i4,
                (double)i1 / i2 - (double)i3 / i4, cf, c.str().c_str());
         errs += 1;
+    }
+
+    return errs;
+}
+
+int testnum2(Muscheme &ms, int count = 1000, bool verbose = false,
+             double eps = 1e-8) {
+    int errs = 0;
+    int i1, i2, i3, i4;
+    munum a, b, c;
+    double da, db, err;
+    string numbertype, testtype;
+    for (int i = 0; i < count; i++) {
+        i1 = nrand();
+        i2 = nrand(8, false, false);
+        i3 = nrand();
+        i4 = nrand(8, false, false);
+        for (int j = 0; j < 3; j++) {
+            switch (j) {
+            case 0:  // Integer
+                a = munum(i1);
+                b = munum(i3);
+                da = i1;
+                db = i3;
+                numbertype = "int";
+                break;
+            case 1:  // rational
+                a = munum(i1, i2);
+                b = munum(i3, i4);
+                da = (double)i1 / (double)i2;
+                db = (double)i3 / (double)i4;
+                numbertype = "rational";
+                break;
+            case 2:  // float
+                a = munum(std::to_string(i1) + "." + std::to_string(i2));
+                b = munum(std::to_string(i3) + "." + std::to_string(i4));
+                da = atof(
+                    (std::to_string(i1) + "." + std::to_string(i2)).c_str());
+                db = atof(
+                    (std::to_string(i3) + "." + std::to_string(i4)).c_str());
+                numbertype = "float";
+            }
+        }
+
+        testtype = "float-conversion";
+        if (munum::muapproxeq(a, da, &err, 1e-6)) {
+            if (verbose)
+                cout << "Ok:" << a << "≈" << da << ", err=" << err
+                     << "test: " << testtype << "->" << numbertype << endl;
+        } else {
+            cout << "Error:" << a << "!≈" << da << ", err=" << err
+                 << "test: " << testtype << "->" << numbertype << endl;
+            errs += 1;
+        }
     }
 
     return errs;
@@ -479,6 +536,7 @@ int main(int argc, char *argv[]) {
         n = 1000000;
     int errs = testit(ms);
     errs += testnum(ms, n, verbose);
+    errs += testnum2(ms, n, verbose);
     errs += testcmpnum(ms, n, verbose);
     errs += testnummul(ms, n, verbose);
     errs += testmuipdiv(ms, n, verbose, true);

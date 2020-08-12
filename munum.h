@@ -130,6 +130,11 @@ struct munum {
                 while (den.length() > 1 && (den[0] == '0'))
                     den = den.substr(1);
                 return;
+            } else {
+                if (isfloat(n)) {
+                    mufloatstring(n);
+                    return;
+                }
             }
         }
         to_nan();
@@ -164,16 +169,19 @@ struct munum {
         // string num,den;
         // bool pos=true;
         ss << std::setprecision(std::numeric_limits<double>::digits10) << f;
-        int exp = 0;
         string s(ss.str());
+        mufloatstring(s);
+    }
 
-        std::cout << "s=" << s << std::endl;
+    void mufloatstring(string s) {
+        int exp = 0;
+        // std::cout << "s=" << s << std::endl;
         if (s == "INF" || s == "INFINITY" || s == infSymbol) {
             to_inf();
             return;
         }
         if (!isfloat(s)) {
-            std::cout << "s=" << s << " is no float." << std::endl;
+            // std::cout << "s=" << s << " is no float." << std::endl;
             to_nan();
             return;
         }
@@ -208,6 +216,7 @@ struct munum {
             pos = true;
         type = mum_valid;
     }
+
     void to_nan() {
         nom = "0";
         den = "1";
@@ -447,11 +456,15 @@ struct munum {
     }
 
     operator double() {
+        double sg = 1.0;
         if (type == mum_valid) {
+            if (!pos)
+                sg = -1.0;
             if (den == "1")
-                return atof(nom.c_str());
+                return sg * atof(nom.c_str());
             else
-                return ((double)atof(nom.c_str()) / (double)atof(den.c_str()));
+                return (sg * (double)atof(nom.c_str()) /
+                        (double)atof(den.c_str()));
         }
         if (type == mum_inf)
             return INFINITY;
@@ -683,6 +696,17 @@ struct munum {
     static bool mule(munum num1, munum num2) {
         int c = mucmp(num1, num2);
         if (c == -1 || c == 0)
+            return true;
+        else
+            return false;
+    }
+
+    static bool muapproxeq(munum num1, double num2, double *perr = nullptr,
+                           double eps = 1.e-6) {
+        double df = std::fabs((double)num1 - num2);
+        if (perr != nullptr)
+            *perr = df;
+        if (df < eps)
             return true;
         else
             return false;
