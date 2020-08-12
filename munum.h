@@ -376,6 +376,12 @@ struct munum {
     munum operator/(munum num2) {
         return mudiv(*this, num2);
     }
+    munum operator%(munum num2) {
+        return mumod(*this,num2);
+    }
+    munum operator^(munum num2) {
+        return mupow(*this,num2);
+    }
 
     operator double() {
         if (type == mum_valid) {
@@ -387,6 +393,13 @@ struct munum {
         if (type == mum_inf)
             return INFINITY;
         return NAN;
+    }
+
+    friend std::ostream &operator<<(std::ostream &os, munum &num) {
+        if (!num.pos)
+            os << "-";
+        os << num.nom << "/" << num.den;
+        return os;
     }
 
     static munum musub(munum num1, munum num2) {
@@ -754,11 +767,52 @@ struct munum {
         return res[1];
     }
 
-    friend std::ostream &operator<<(std::ostream &os, munum &num) {
-        if (!num.pos)
-            os << "-";
-        os << num.nom << "/" << num.den;
-        return os;
+    static munum muippow(munum num1, munum num2) {
+        munum r;
+        if (num2.den != "1" || !num2.pos ||
+            num1.type != munum::mum_valid || num2.type != munum::mum_valid) {
+            r.to_nan();
+            return r;
+        }
+        if (num2.nom=="0") {
+            r=munum(1);
+            return r;
+        }
+        if (mueq(mumod(num2,2),munum(1))) {
+            num2=musub(num2,munum(1));
+            return mumul(num1,muippow(num1,num2));
+        } else {
+            munum p = muippow(num1,mudiv(num2,munum(2)));
+            return mumul(p,p);
+        }
+        /* from:  Eli Bendersky's website, Exponentiation by squaring
+        def expt_rec(a, b):
+        if b == 0:
+            return 1
+        elif b % 2 == 1:
+            return a * expt_rec(a, b - 1)
+        else:
+            p = expt_rec(a, b / 2)
+            return p * p
+        */
+    }
+
+    static munum mupow(munum num1, munum num2) {
+        munum r;
+        if (num2.den != "1" || num1.type != munum::mum_valid || num2.type != munum::mum_valid) {
+            r.to_nan();
+            return r;
+        }
+        bool neg=false;
+        if (!num2.pos) {
+            neg=true;
+            num2.pos=true;
+        }
+        r=muippow(num1,num2);
+        if (neg) {
+            r=mudiv(munum(1),r);
+        }
+        return r;
     }
 };
 

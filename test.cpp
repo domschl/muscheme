@@ -450,8 +450,8 @@ int testtypeconv(Muscheme &ms, int n, bool verbose) {
     munum n1(1, 2), n2, n3;
     n3 = n1 + n1;
     n2 = n1 + (munum)3;
-    printf("n2: %s\n", n2.str().c_str());
-    printf("n3: %s\n", n3.str().c_str());
+    //printf("n2: %s\n", n2.str().c_str());
+    //printf("n3: %s\n", n3.str().c_str());
     return 0;
 }
 
