@@ -50,8 +50,11 @@ struct munum {
     static bool isint(string tok) {
         if (tok.length() == 0)
             return false;
-        if (tok[0] == '-')
+        if (tok[0] == '-') {
+            if (tok.length() > 1 && tok[1] == '+')
+                return false;
             return isnat(tok.substr(1));
+        }
         if (tok.length() && tok[0] == '+')
             return isnat(tok.substr(1));
         return isnat(tok);
@@ -176,6 +179,8 @@ struct munum {
         }
 
         int p = s.find('e');
+        if (p == NPOS)
+            p = s.find('E');
         if (p != NPOS) {
             exp = atoi(s.substr(p + 1).c_str());
             s = s.substr(0, p);

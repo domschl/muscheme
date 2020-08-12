@@ -19,7 +19,9 @@ int testit(Muscheme &ms, bool verbose = false) {
                 printf("OK: %s is int.\n", it.c_str());
         }
     }
-    std::vector<string> nints{"0e", "0.1", "23a424", "", "-", ".", "e"};
+    std::vector<string> nints{"0e", "0.1", "23a424", "",    "-",
+                              ".",  "e",   "+-0",    "-+0", "+",
+                              "+-", "+e",  "+.",     "-+7", "+-7"};
     for (auto const &it : nints) {
         if (munum::isint(it)) {
             printf("Fail: %s is NOT an int!\n", it.c_str());
@@ -450,8 +452,8 @@ int testtypeconv(Muscheme &ms, int n, bool verbose) {
     munum n1(1, 2), n2, n3;
     n3 = n1 + n1;
     n2 = n1 + (munum)3;
-    //printf("n2: %s\n", n2.str().c_str());
-    //printf("n3: %s\n", n3.str().c_str());
+    // printf("n2: %s\n", n2.str().c_str());
+    // printf("n3: %s\n", n3.str().c_str());
     return 0;
 }
 
