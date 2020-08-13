@@ -256,6 +256,19 @@ struct munum {
         return ("muBAD");
     }
 
+    string strH() {
+
+        string s=str();
+        if (type==mum_valid && den!="1") {
+            double df=(double)(*this);
+            std::stringstream ss;
+            ss << std::setprecision(std::numeric_limits<double>::digits10) << df;
+            string ds(ss.str());
+            s+= " (" + ds + ") ";
+        }
+        return s;
+    }
+
     static munum muipadd(munum num1, munum num2) {
         int l, l1, l2;
         int c = 0, n1, n2, n3;
@@ -475,6 +488,10 @@ struct munum {
         if (!num.pos)
             os << "-";
         os << num.nom << "/" << num.den;
+        if (num.type==mum_valid && num.den != "1") {
+            double df=(double)num;
+            os << " (" << std::setprecision(std::numeric_limits<double>::digits10) << df << ") ";
+        }
         return os;
     }
 

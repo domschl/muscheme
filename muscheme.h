@@ -94,7 +94,7 @@ class Muscheme {
             case atom::symbol:
                 return string((char *)val);
             case atom::mnum:
-                return ((munum *)val)->str();
+                return ((munum *)val)->strH();
             default:
                 return "???";
             }
