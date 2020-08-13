@@ -816,14 +816,14 @@ class Muscheme {
                 return inv;
             }
             astnode *res = nullptr;
-            int ifc = *(int *)cond->val;
+            munum ifc = munum(*(munum *)cond->val);
             std::cout << "cond: " << ifc << std::endl;
-            if (*(int *)cond->val != 0) {
+            if (ifc.type == munum::mum_valid && ifc.nom != "0") {
                 std::cout << "true" << std::endl;
-                res = reval(p2);
+                res = reval(p2, false);
             } else if (l == 4) {
                 std::cout << "false" << std::endl;
-                res = reval(p3);
+                res = reval(p3, false);
             }
             return res;
         } else if (cmd == "eval") {
