@@ -772,10 +772,12 @@ class Muscheme {
                 if (i == 2) {
                     if (nps != 2) {
                         si = 0;
-                        std::cout << "invalid parameters in compare!"
-                                  << std::endl;
+                        std::cout
+                            << "invalid parameters in compare, nps: " << nps
+                            << std::endl;
                     } else {
-                        std::cout << "cond " << si << cmd << *(int *)p->val;
+                        std::cout << "cond " << pars[0] << cmd << " "
+                                  << pars[1];
                         if (cmd == "==")
                             si = (pars[0] == pars[1]);
                         else if (cmd == "!=")
