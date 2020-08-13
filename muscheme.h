@@ -10,21 +10,10 @@ namespace msc {
 
 class Muscheme {
   public:
-    enum atom {
-        nul = 0,
-        mnum,
-        str,
-        symbol,
-        proc,
-        list,
-        lista,
-        liste,
-        cmt,
-        qt
-    };
-    std::vector<std::string> atomnames{"nul",   "mnum",
-                                       "str",   "symbol", "proc", "list",
-                                       "lista", "liste",  "cmt",  "qt"};
+    enum atom { nul = 0, mnum, str, symbol, proc, list, lista, liste, cmt, qt };
+    std::vector<std::string> atomnames{"nul",  "mnum", "str",   "symbol",
+                                       "proc", "list", "lista", "liste",
+                                       "cmt",  "qt"};
     enum astval { valid, invalid, empty };
 
     typedef std::string string;
@@ -788,17 +777,17 @@ class Muscheme {
                     } else {
                         std::cout << "cond " << si << cmd << *(int *)p->val;
                         if (cmd == "==")
-                            si = (pars[0]==pars[1]);
+                            si = (pars[0] == pars[1]);
                         else if (cmd == "!=")
-                            si = (pars[0]!= pars[1]);
+                            si = (pars[0] != pars[1]);
                         else if (cmd == ">=")
-                            si = (pars[0]>= pars[1]);
+                            si = (pars[0] >= pars[1]);
                         else if (cmd == "<=")
-                            si = (pars[0]<= pars[1]);
+                            si = (pars[0] <= pars[1]);
                         else if (cmd == ">")
-                            si = (pars[0]> pars[1]);
+                            si = (pars[0] > pars[1]);
                         else if (cmd == "<")
-                            si = (pars[0]< pars[1]);
+                            si = (pars[0] < pars[1]);
                     }
                     std::cout << " => " << si << std::endl;
                 }
@@ -875,7 +864,7 @@ class Muscheme {
             return res;
         } else if (cmd == "float") {
             if (l != 2) {
-                std::cout << " fac needs 1 param" << std::endl;
+                std::cout << " float needs 1 param" << std::endl;
                 inv = new astnode();
                 return inv;
             }
@@ -883,21 +872,46 @@ class Muscheme {
             bool bF = false;
             astnode *p = astind(past, 1);
             if (p == nullptr) {
-                std::cout << "unexpected nullptr at fac params" << std::endl;
+                std::cout << "unexpected nullptr at float params" << std::endl;
                 inv = new astnode();
                 return inv;
             }
             p = reduce(p, &bF);
             if (p->type == atom::mnum) {
                 si = *(munum *)p->val;
-                double fi=(double)si;
+                double fi = (double)si;
                 std::cout << fi << std::endl;
             }
             if (bF)
                 delete p;
             res = new astnode(si);
             return res;
-        }  
+        } else if (cmd == "quote" || cmd == "car" || cmd == "cdr") {
+            if (l != 2) {
+                std::cout << cmd << " needs 1 param" << std::endl;
+                inv = new astnode();
+                return inv;
+            }
+            astnode *p = astind(past, 1);
+            if (p == nullptr) {
+                std::cout << "unexpected nullptr at float params" << std::endl;
+                inv = new astnode();
+                return inv;
+            }
+            if (cmd == "quote") {
+                // res = new astnode(*p);
+                // std::cout << astlen(res) << " is new list" << std::endl;
+                return p;
+            } else {
+                std::cout << "NOT IMPLEMENTED! (car/cdr)" << std::endl;
+            }
+
+            // p = reduce(p, &bF);
+            // if (bF)
+            //    delete p;
+            // res = new astnode(si);
+            // return res;
+        }
 
         std::cout << " something is not implemented: " << past->to_str()
                   << std::endl;

@@ -258,13 +258,14 @@ struct munum {
 
     string strH() {
 
-        string s=str();
-        if (type==mum_valid && den!="1") {
-            double df=(double)(*this);
+        string s = str();
+        if (type == mum_valid && den != "1") {
+            double df = (double)(*this);
             std::stringstream ss;
-            ss << std::setprecision(std::numeric_limits<double>::digits10) << df;
+            ss << std::setprecision(std::numeric_limits<double>::digits10)
+               << df;
             string ds(ss.str());
-            s+= " (" + ds + ") ";
+            s += " (" + ds + ") ";
         }
         return s;
     }
@@ -488,9 +489,11 @@ struct munum {
         if (!num.pos)
             os << "-";
         os << num.nom << "/" << num.den;
-        if (num.type==mum_valid && num.den != "1") {
-            double df=(double)num;
-            os << " (" << std::setprecision(std::numeric_limits<double>::digits10) << df << ") ";
+        if (num.type == mum_valid && num.den != "1") {
+            double df = (double)num;
+            os << " ("
+               << std::setprecision(std::numeric_limits<double>::digits10) << df
+               << ") ";
         }
         return os;
     }
