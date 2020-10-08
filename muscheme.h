@@ -501,6 +501,56 @@ class Muscheme {
         }
     }
 
+    void printexpr(astnode *past) {
+        std::vector<astnode *> stack;
+        bool esc = false;
+        // preval(ast);
+        while (!esc) {
+            while (past == nullptr) {
+                if (stack.size() > 0) {
+                    past = stack.back();
+                    stack.pop_back();
+                    printf("m)");
+                } else {
+                    // printf("e)\n");
+                    return;
+                }
+            }
+            // printf("%s ",atomnames[past->type].c_str());
+            // printf("{%s %s}", atomnames[past->type].c_str(),
+            //       past->to_str().c_str());
+            printf("%s ", past->to_str().c_str());
+            // if (past->type == atom::list &&
+            // past->down == nullptr)
+            //    printf("MD! ");
+            if (past->down != nullptr && past->right != nullptr) {
+                //    printf("<rd> ");
+                stack.push_back(past->right);
+                past = past->down;
+            } else {
+                if (past->right != nullptr) {
+                    past = past->right;
+                } else {
+                    if (past->down != nullptr) {
+                        past = past->down;
+                        stack.push_back(nullptr);
+                        printf("(");
+                        // printf("<d> ");
+                    } else {
+                        if (stack.size() == 0) {
+                            esc = true;
+                            printf(")\n");
+                        } else {
+                            past = stack.back();
+                            stack.pop_back();
+                            printf("x)");  //]<U> ");
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     unsigned int astlen(astnode *past) {
         if (past == nullptr)
             return 0;

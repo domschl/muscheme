@@ -171,7 +171,7 @@ void repl(std::string &prompt, std::string &prompt2) {
             } else {
             */
             cmd += inp + "\n";
-            printf("\nInp: %s", cmd.c_str());
+            // printf("\nInp: %s", cmd.c_str());
             if (bq || cmd == "(quit)\n") {
                 quitInterpreter(ms);
                 return;
@@ -191,6 +191,8 @@ void repl(std::string &prompt, std::string &prompt2) {
         std::cout << "Eval dt: "
                   << std::chrono::duration<double, std::nano>(diff).count()
                   << " ns" << std::endl;
+        std::cout << "ev: ";
+        ms.printexpr(past);
         if (past != nullptr) {
             ans = past->to_str();
             if (past->val != nullptr) {
@@ -201,6 +203,7 @@ void repl(std::string &prompt, std::string &prompt2) {
         } else
             ans = "ok.";
         printf("-> %s\n", ans.c_str());
+
         for (auto ap : ast) {
             if (past != ap) {
                 if (ap->val != nullptr)
