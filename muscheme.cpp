@@ -115,7 +115,7 @@ string termDetect(string &prompt, string &prompt2, string &inf, string &fun) {
         prompt = mu + lambda + "> ";
         prompt2 = "  > ";
         inf = "\x1bO\xf7";  // single shot GR3, DEC tech char set infinity
-        fun = "f";
+        fun = "{f}";
     } else {
         // std::cout << "no special terminal" << std::endl;
         prompt = "μλ> ";

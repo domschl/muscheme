@@ -744,7 +744,24 @@ class Muscheme {
                 inv = new astnode();
                 return inv;
             }
-            std::cout << "defn isn't implemented yet" << std::endl;
+            astnode *pfnn = past->right;
+            astnode *ppar = pfnn->right;
+            astnode *pdef = ppar->right;
+            std::vector<astnode *> ast;
+            if (pfnn->type != atom::symbol) {
+                std::cout << "defn fnname vars fndef, fnname not a symbol: " << pfnn->to_str() << std::endl;
+                inv = new astnode();
+                return inv;
+            }
+            string fnname = fnSymbol + pfnn->to_str();
+            if (symstore.count(fnname)) {
+                // XXX This would be a place to prevent mutability.
+                freesym(fnname);
+            }
+            std::cout << "Creating fn " << fnname << std::endl;
+            symstore[fnname] = newexpr(ppar, nullptr, nullptr, true, ast);
+            // std::cout << "defn isn't implemented yet" << std::endl;
+            return nullptr;
         }
         if (cmd == "define") {
             std::cout << "define: l=" << l << std::endl;
@@ -756,6 +773,11 @@ class Muscheme {
             astnode *pn = past->right;
             astnode *pv = pn->right;
             std::vector<astnode *> ast;
+            if (pn->type != atom::symbol) {
+                std::cout << "define symbol expr, not a symbol: " << pn->to_str() << std::endl;
+                inv = new astnode();
+                return inv;
+            }
             if (symstore.count(pn->to_str())) {
                 // XXX This would be the place to prevent mutability.
                 freesym(pn->to_str());
@@ -769,6 +791,11 @@ class Muscheme {
                 return inv;
             }
             astnode *pn = past->right;
+            if (pn->type != atom::symbol) {
+                std::cout << "set symbol expr, not a symbol: " << pn->to_str() << std::endl;
+                inv = new astnode();
+                return inv;
+            }
             astnode *pv = pn->right;
             std::vector<astnode *> ast;
             if (symstore.count(pn->to_str())) {
@@ -993,6 +1020,12 @@ class Muscheme {
             //    delete p;
             // res = new astnode(si);
             // return res;
+        }
+        string fnname = fnSymbol + cmd;
+        if (symstore.count(fnname) > 0) {
+            std::vector<astnode *> v = symstore[fnname];
+            std::cout << "eval of " << fnname << " not yet implemented." << std::endl;
+            return nullptr;
         }
 
         std::cout << " something is not implemented: " << past->to_str()
