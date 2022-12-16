@@ -102,7 +102,7 @@ void quitInterpreter(Muscheme &ms) {
     std::cout << "done freesyms" << std::endl;
 }
 
-string termDetect(string &prompt, string &prompt2, string &inf) {
+string termDetect(string &prompt, string &prompt2, string &inf, string &fun) {
     const char *ct = std::getenv("TERM");
     string term(ct);
     if (term == "vt420") {
@@ -115,11 +115,13 @@ string termDetect(string &prompt, string &prompt2, string &inf) {
         prompt = mu + lambda + "> ";
         prompt2 = "  > ";
         inf = "\x1bO\xf7";  // single shot GR3, DEC tech char set infinity
+        fun = "f";
     } else {
         // std::cout << "no special terminal" << std::endl;
         prompt = "μλ> ";
         prompt2 = "  > ";
         inf = "∞";
+        fun = "⒡";
     }
     return term;
 }
@@ -218,8 +220,10 @@ void repl(std::string &prompt, std::string &prompt2) {
 int main(int argc, char *argv[]) {
     string prompt = "μλ> ", prompt2 = "  > ";
     string inf;
-    termDetect(prompt, prompt2, inf);
+    string fun;
+    termDetect(prompt, prompt2, inf, fun);
     msc::infSymbol = inf;
+    msc::fnSymbol = fun;
     // std::cout << "p1:" << prompt << ", p2:" << prompt2 << std::endl;
     repl(prompt, prompt2);
     std::cout << "end-repl" << std::endl;

@@ -8,13 +8,26 @@
 #include "munum.h"
 namespace msc {
 
+string fnSymbol = "⒡";
+
 class Muscheme {
   public:
-    enum atom { nul = 0, mnum, str, symbol, proc, list, lista, liste, cmt, qt };
-    std::vector<std::string> atomnames{"nul",  "mnum", "str",   "symbol",
+    enum atom { nul = 0,
+                mnum,
+                str,
+                symbol,
+                proc,
+                list,
+                lista,
+                liste,
+                cmt,
+                qt };
+    std::vector<std::string> atomnames{"nul", "mnum", "str", "symbol",
                                        "proc", "list", "lista", "liste",
-                                       "cmt",  "qt"};
-    enum astval { valid, invalid, empty };
+                                       "cmt", "qt"};
+    enum astval { valid,
+                  invalid,
+                  empty };
 
     typedef std::string string;
     // unsigned long NPOS=std::string::npos;
@@ -96,7 +109,10 @@ class Muscheme {
 
     std::map<string, std::vector<astnode *>> symstore;
 
-    enum aststate { start, inter, token, end };
+    enum aststate { start,
+                    inter,
+                    token,
+                    end };
 
     bool isstr(string tok) {  // handling for '/'?! TBD.
         if (tok.length() < 2)
@@ -114,8 +130,13 @@ class Muscheme {
         }
     }
 
-    enum tokstate { nil, sym, vstr, comm };
-    enum parse_state { ok, failure, incomplete };
+    enum tokstate { nil,
+                    sym,
+                    vstr,
+                    comm };
+    enum parse_state { ok,
+                       failure,
+                       incomplete };
 
     std::vector<string> tokenize(string cmd, parse_state *pstate) {
         std::vector<string> toks;
@@ -715,6 +736,15 @@ class Muscheme {
                 inv = new astnode();
                 return inv;
             }
+        }
+        if (cmd == "defn") {
+            std::cout << "function defn, l=" << l << std::endl;
+            if (l != 4) {
+                std::cout << "defn needs 3 params" << std::endl;
+                inv = new astnode();
+                return inv;
+            }
+            std::cout << "defn isn't implemented yet" << std::endl;
         }
         if (cmd == "define") {
             std::cout << "define: l=" << l << std::endl;
