@@ -15,7 +15,7 @@
 #include <termios.h>  // struct termios, tcgetattr(), tcsetattr()
 #include <stdio.h>    // perror(), stderr, stdin, fileno()
 
-using msc::munum;
+// using msc::munum;
 using msc::Muscheme;
 using std::string;
 

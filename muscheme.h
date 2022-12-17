@@ -107,7 +107,9 @@ class Muscheme {
         }
     };
 
-    std::map<string, std::vector<astnode *>> symstore;
+    std::map<string, std::vector<astnode *>> symheap;
+    std::vector<std::map<string, std::vector<astnode *>>> symstacks;
+    
 
     enum aststate { start,
                     inter,
@@ -564,7 +566,7 @@ class Muscheme {
                         } else {
                             past = stack.back();
                             stack.pop_back();
-                            printf("x)");  //]<U> ");
+                            printf("〛");  //]<U> ");
                         }
                     }
                 }
@@ -725,8 +727,8 @@ class Muscheme {
         }
         string cmd((char *)past->val);
         if (l == 1) {
-            if (symstore.count(cmd)) {
-                astnode *p = receval(symstore[cmd]);
+            if (symheap.count(cmd)) {
+                astnode *p = receval(symheap[cmd]);
                 std::cout << "found: " << cmd << std::endl;
                 p = new astnode(*p);
                 return p;
@@ -753,13 +755,37 @@ class Muscheme {
                 inv = new astnode();
                 return inv;
             }
+            astnode *plist = ppar->down;
+            if (plist==nullptr) {
+                std::cout << "defn fnname vars fndef, vars not a list: " << ppar->to_str() << std::endl;
+                inv = new astnode();
+                return inv;
+            }
+            bool vars=true;
+            while (vars) {
+                if (plist->type!=atom::symbol) {
+                    std::cout << "defn fnname vars fndef, vars not a list of symbols: " << ppar->to_str() << std::endl;
+                    inv = new astnode();
+                    return inv;
+                }
+                if (plist->down != nullptr) {
+                    std::cout << "defn fnname vars fndef, vars not a list of symbols: " << ppar->to_str() << std::endl;
+                    inv = new astnode();
+                    return inv;
+                }
+                if (plist->right==nullptr) {
+                    vars=false;
+                } else {
+                    plist=plist->right;
+                }
+            }
             string fnname = fnSymbol + pfnn->to_str();
-            if (symstore.count(fnname)) {
+            if (symheap.count(fnname)) {
                 // XXX This would be a place to prevent mutability.
                 freesym(fnname);
             }
             std::cout << "Creating fn " << fnname << std::endl;
-            symstore[fnname] = newexpr(ppar, nullptr, nullptr, true, ast);
+            symheap[fnname] = newexpr(ppar, nullptr, nullptr, true, ast);
             // std::cout << "defn isn't implemented yet" << std::endl;
             return nullptr;
         }
@@ -778,11 +804,11 @@ class Muscheme {
                 inv = new astnode();
                 return inv;
             }
-            if (symstore.count(pn->to_str())) {
+            if (symheap.count(pn->to_str())) {
                 // XXX This would be the place to prevent mutability.
                 freesym(pn->to_str());
             }
-            symstore[pn->to_str()] = newexpr(pv, nullptr, nullptr, true, ast);
+            symheap[pn->to_str()] = newexpr(pv, nullptr, nullptr, true, ast);
             return nullptr;
         } else if (cmd == "set") {
             if (l != 3) {
@@ -798,12 +824,12 @@ class Muscheme {
             }
             astnode *pv = pn->right;
             std::vector<astnode *> ast;
-            if (symstore.count(pn->to_str())) {
+            if (symheap.count(pn->to_str())) {
                 // XXX This would be the place to prevent mutability.
                 freesym(pn->to_str());
             }
             astnode *res = reval(pv, false);
-            symstore[pn->to_str()] = newexpr(res, nullptr, nullptr, true, ast);
+            symheap[pn->to_str()] = newexpr(res, nullptr, nullptr, true, ast);
             return nullptr;
         } else if (cmd == "+" || cmd == "*" || cmd == "-" || cmd == "/" ||
                    cmd == "%" || cmd == "^") {
@@ -1022,9 +1048,12 @@ class Muscheme {
             // return res;
         }
         string fnname = fnSymbol + cmd;
-        if (symstore.count(fnname) > 0) {
-            std::vector<astnode *> v = symstore[fnname];
+        if (symheap.count(fnname) > 0) {
+            std::vector<astnode *> v = symheap[fnname];
             std::cout << "eval of " << fnname << " not yet implemented." << std::endl;
+            std::cout << "v[0]: "; 
+            printexpr(v[0]);
+            std::cout << std::endl;
             return nullptr;
         }
 
@@ -1035,9 +1064,9 @@ class Muscheme {
     }
 
     void freesym(string sym, bool delentry = true) {
-        if (!symstore.count(sym))
+        if (!symheap.count(sym))
             return;
-        for (auto b : symstore[sym]) {
+        for (auto b : symheap[sym]) {
             // astnode *p=b;
             if (b->val != nullptr) {
                 if (b->type == atom::mnum) {
@@ -1050,12 +1079,12 @@ class Muscheme {
             delete b;
         }
         if (delentry)
-            symstore.erase(symstore.find(sym));
+            symheap.erase(symheap.find(sym));
     }
 
     void freesyms() {
-        std::cout << "Freeing " << symstore.size() << " entries" << std::endl;
-        for (auto a : symstore) {
+        std::cout << "Freeing " << symheap.size() << " entries" << std::endl;
+        for (auto a : symheap) {
             freesym(a.first, false);
         }
     }
