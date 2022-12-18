@@ -1,3 +1,5 @@
+#pragma once
+
 #include <iostream>
 #include <vector>
 #include <string>
@@ -11,7 +13,7 @@ using std::string;
 // using std::string::NPOS;
 #define NPOS (std::string::npos)
 
-string infSymbol = "∞";
+static string infSymbol = "∞";
 
 struct munum {
     enum munum_type { mum_valid, mum_nan, mum_inf };

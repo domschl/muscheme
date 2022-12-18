@@ -188,7 +188,7 @@ void repl(std::string &prompt, std::string &prompt2) {
             continue;
         }
         auto start = std::chrono::steady_clock::now();
-        Muscheme::astnode *past = ms.receval(ast);
+        Muscheme::astnode *past = ms.receval(ast, -1);
         auto diff = std::chrono::steady_clock::now() - start;
         std::cout << "Eval dt: "
                   << std::chrono::duration<double, std::nano>(diff).count()

@@ -1,3 +1,5 @@
+#pragma once
+
 #include <string>
 #include <cstring>
 #include <iostream>
@@ -8,7 +10,7 @@
 #include "munum.h"
 namespace msc {
 
-string fnSymbol = "⒡";
+static string fnSymbol = "⒡";
 
 class Muscheme {
   public:
@@ -599,14 +601,14 @@ class Muscheme {
         }
     }
 
-    astnode *receval(std::vector<astnode *> ast) {
+    astnode *receval(std::vector<astnode *> ast, int stackidx) {
         astnode *past;
         if (ast.size() < 1) {
             std::cout << "ast too small, no data" << std::endl;
             return nullptr;
         }
         past = ast[0];
-        astnode *p = reval(past);
+        astnode *p = reval(past, true, stackidx);
         // if (p!=nullptr) p=new astnode(*p);
         return p;
     }
@@ -660,7 +662,7 @@ class Muscheme {
         return ast;
     }
 
-    astnode *reduce(astnode *p, bool *alloced) {
+    astnode *reduce(astnode *p, bool *alloced, int stackidx) {
         *alloced = false;
         astnode *inv;
         astnode *pn;
@@ -671,7 +673,7 @@ class Muscheme {
             return inv;
         }
         if (p->type == atom::list) {
-            pn = reval(p, false);
+            pn = reval(p, false, stackidx);
             //*alloced=true;
             return pn;
         }
@@ -680,7 +682,7 @@ class Muscheme {
             astnode *rp = new astnode(*p);
             rp->down = nullptr;
             rp->right = nullptr;
-            pn = reval(rp);
+            pn = reval(rp, true, stackidx);
             *alloced = true;
             delete rp;
             std::cout << " " << p->to_str() << std::endl;
@@ -689,7 +691,7 @@ class Muscheme {
         return p;
     }
 
-    astnode *reval(astnode *past, bool multi = true) {
+    astnode *reval(astnode *past, bool multi, int stackidx) {
         astnode *inv, *res;
         if (past == nullptr) {
             std::cout << "cannot eval nullptr" << std::endl;
@@ -698,9 +700,9 @@ class Muscheme {
         }
         if (past->type == atom::list) {
             if (past->right == nullptr || !multi) {
-                return reval(past->down);
+                return reval(past->down, true, stackidx);
             } else {
-                astnode *p = reval(past->down);
+                astnode *p = reval(past->down, true, stackidx);
                 if (p != nullptr) {
                     if (p->val != nullptr) {
                         free(p->val);
@@ -708,7 +710,7 @@ class Muscheme {
                     }
                     delete p;
                 }
-                return reval(past->right);
+                return reval(past->right, true, stackidx);
             }
         }
         unsigned int l = astlen(past);
@@ -728,7 +730,7 @@ class Muscheme {
         string cmd((char *)past->val);
         if (l == 1) {
             if (symheap.count(cmd)) {
-                astnode *p = receval(symheap[cmd]);
+                astnode *p = receval(symheap[cmd], stackidx);
                 std::cout << "found: " << cmd << std::endl;
                 p = new astnode(*p);
                 return p;
@@ -828,7 +830,7 @@ class Muscheme {
                 // XXX This would be the place to prevent mutability.
                 freesym(pn->to_str());
             }
-            astnode *res = reval(pv, false);
+            astnode *res = reval(pv, false, stackidx);
             symheap[pn->to_str()] = newexpr(res, nullptr, nullptr, true, ast);
             return nullptr;
         } else if (cmd == "+" || cmd == "*" || cmd == "-" || cmd == "/" ||
@@ -850,7 +852,7 @@ class Muscheme {
                     inv = new astnode();
                     return inv;
                 }
-                p = reduce(p, &bF);
+                p = reduce(p, &bF, stackidx);
                 if (p->type == atom::mnum) {
                     if (i == 1) {
                         si = *(munum *)p->val;
@@ -894,7 +896,7 @@ class Muscheme {
                 astnode *p = astind(past, i);
                 std::cout << "prered: ";
                 printNode(p);
-                p = reduce(p, &bF);
+                p = reduce(p, &bF, stackidx);
                 std::cout << ", postred: ";
                 printNode(p);
                 std::cout << std::endl;
@@ -943,7 +945,7 @@ class Muscheme {
             astnode *p3 = nullptr;
             if (l == 4)
                 p3 = astind(past, 3);
-            astnode *cond = reduce(p1, &bF);
+            astnode *cond = reduce(p1, &bF, stackidx);
             if (cond == nullptr || cond->type != atom::mnum) {
                 astnode *inv = new astnode();
                 return inv;
@@ -953,10 +955,10 @@ class Muscheme {
             std::cout << "cond: " << ifc << std::endl;
             if (ifc.type == munum::mum_valid && ifc.nom != "0") {
                 std::cout << "true" << std::endl;
-                res = reval(p2, false);
+                res = reval(p2, false, stackidx);
             } else if (l == 4) {
                 std::cout << "false" << std::endl;
-                res = reval(p3, false);
+                res = reval(p3, false, stackidx);
             }
             return res;
         } else if (cmd == "eval") {
@@ -967,7 +969,7 @@ class Muscheme {
             }
             bool bF = false;
             astnode *p1 = astind(past, 1);
-            astnode *res0 = reduce(p1, &bF);
+            astnode *res0 = reduce(p1, &bF, stackidx);
             astnode *res = new astnode(*res0);
             if (bF)
                 delete res0;
@@ -988,7 +990,7 @@ class Muscheme {
                 inv = new astnode();
                 return inv;
             }
-            p = reduce(p, &bF);
+            p = reduce(p, &bF, stackidx);
             if (p->type == atom::mnum) {
                 si = *(munum *)p->val;
                 si = munum::mufac(si);
@@ -1011,7 +1013,7 @@ class Muscheme {
                 inv = new astnode();
                 return inv;
             }
-            p = reduce(p, &bF);
+            p = reduce(p, &bF, stackidx);
             if (p->type == atom::mnum) {
                 si = *(munum *)p->val;
                 double fi = (double)si;
@@ -1041,7 +1043,7 @@ class Muscheme {
                 std::cout << "NOT IMPLEMENTED! (car/cdr)" << std::endl;
             }
 
-            // p = reduce(p, &bF);
+            // p = reduce(p, &bF, stackidx);
             // if (bF)
             //    delete p;
             // res = new astnode(si);
