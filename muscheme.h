@@ -729,6 +729,18 @@ class Muscheme {
         }
         string cmd((char *)past->val);
         if (l == 1) {
+            if (stackidx!=-1) {
+              if (stackidx<symstacks.size()) {
+                if (symstacks[stackidx].count(cmd)) {
+                  astnode *p = receval(symstacks[stackidx][cmd], stackidx);
+                  std::cout << "found " << cmd << " in stack " << stackidx << std::endl;
+                  p = new astnode(*p);
+                  return p;
+                }
+              } else {
+                std::cout << "stackidx " << stackidx << " out of range" << std::endl;
+              }
+            }
             if (symheap.count(cmd)) {
                 astnode *p = receval(symheap[cmd], stackidx);
                 std::cout << "found: " << cmd << std::endl;
